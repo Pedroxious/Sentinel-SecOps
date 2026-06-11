@@ -2,7 +2,7 @@
 
 *Daily SecOps intelligence — automated CVE monitoring, AI-powered threat analysis & vulnerability insights*
 
-> 🕐 **Última atualização:** aguardando primeira execução | 📊 **CVEs críticos:** —
+> 🕐 **Última atualização:** 2026-06-11 às 15:58 (Brasília) | 📊 **CVEs críticos:** 10 encontrados
 
 ---
 
