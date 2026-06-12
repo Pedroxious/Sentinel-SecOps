@@ -434,7 +434,7 @@ def _build_cve_card(item):
 
 def generate_html_dashboard(cves_analyzed, date_str, hour_str, status_text):
     os.makedirs("dashboards", exist_ok=True)
-    filepath = "dashboards/index.html"
+    filepath = "index.html"
     
     cards_html = ""
     if not cves_analyzed:
@@ -510,7 +510,7 @@ def update_readme(date_str, hour_str, count_cves, pdf_file, status_text):
             f"**Network Status:** {status_text}\n\n"
             f"**Critical CVEs Today:** {count_cves}\n\n"
             f"**[Download Latest PDF Report]({pdf_file})**\n\n"
-            f"**[View Minimal HTML Dashboard](dashboards/index.html)**\n\n"
+            f"**[View Minimal HTML Dashboard](index.html)**\n\n"
         )
 
         start_idx = content.find("<!-- STATUS_START -->")

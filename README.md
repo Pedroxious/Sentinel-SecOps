@@ -25,7 +25,7 @@ The analysis is enhanced by AI models (Google Gemini 2.0) to provide structured 
 
 **[Download Latest PDF Report](pdf_reports/Report_2026-06-12_15-26.pdf)**
 
-**[View Minimal HTML Dashboard](dashboards/index.html)**
+**[View Minimal HTML Dashboard](index.html)**
 
 <!-- STATUS_END -->
 
@@ -59,7 +59,7 @@ python scraper.py
 
 - **PDF Reports**: Stored in `pdf_reports/`, these documents provide formal and detailed breakdowns of the most critical daily vulnerabilities.
 - **CSV Database**: Found at `dashboards/historico.csv`, useful for integrating with SIEMs or BI tools.
-- **HTML Dashboard**: A minimal web representation stored at `dashboards/index.html`.
+- **HTML Dashboard**: A minimal web representation stored at `index.html`.
 
 ---
 *Developed and maintained by Pedroxious.*
