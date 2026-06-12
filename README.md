@@ -1,73 +1,65 @@
-# 🔐 Sentinel SecOps
+# Sentinel-SecOps
 
-*Daily SecOps intelligence — automated CVE monitoring, AI-powered threat analysis & vulnerability insights*
+An Automated Threat Intelligence and Vulnerability Management Platform.
 
-> 🕐 **Última atualização:** aguardando primeira execução | 📊 **CVEs críticos:** —
+This repository tracks the latest Common Vulnerabilities and Exposures (CVEs) from the National Vulnerability Database (NVD) and cross-references them with industry-leading intelligence feeds including FIRST EPSS, CISA KEV, ThreatFox, and GitHub Security Advisories. 
 
----
+The analysis is enhanced by AI models (Google Gemini 2.0) to provide structured impact analysis and mitigation recommendations.
 
-## O que é?
+## Project Architecture
 
-**Sentinel SecOps** é um agente de segurança automatizado que roda **3 vezes por dia** via GitHub Actions.
+- **Threat Intel Feeds**: Direct API ingestion from NVD, CISA, FIRST, and abuse.ch.
+- **AI Processing**: Google Gemini transforms raw CVE descriptions into actionable insights.
+- **Reporting Engine**: Automated pipeline built in Python. Reports are dynamically generated as professional PDF documents (`fpdf2`) and backed up to a minimalistic HTML dashboard interface.
+- **Data Persistence**: A comprehensive CSV database (`dashboards/historico.csv`) tracks all processed vulnerabilities.
+- **Automation**: Fully managed via GitHub Actions.
 
-Ele monitora a [NVD (National Vulnerability Database)](https://nvd.nist.gov/) — o maior banco de vulnerabilidades do mundo — filtra as falhas de severidade **HIGH** e **CRITICAL**, e usa **Gemini AI** para explicar cada uma em português: o que é, o que foi afetado, qual o impacto real e o que fazer.
+## Current Network Status
 
----
+<!-- STATUS_START -->
+**Last Update:** 2026-06-12 15:21 (BRT)
 
-## Como funciona
+**Network Status:** SECURE - No Critical Alerts
 
+**Critical CVEs Today:** 0
+
+**[Download Latest PDF Report](pdf_reports/Report_2026-06-12_15-21.pdf)**
+
+**[View Minimal HTML Dashboard](dashboards/index.html)**
+
+<!-- STATUS_END -->
+
+## Installation and Execution
+
+1. Clone the repository:
+```bash
+git clone https://github.com/Pedroxious/Sentinel-SecOps.git
+cd Sentinel-SecOps
 ```
-GitHub Actions (05h, 11h, 17h — Brasília)
-        ↓
-   scraper.py
-        ↓
-  NVD API → busca CVEs das últimas 8h
-        ↓
-  Filtra HIGH e CRITICAL (score ≥ 7.0)
-        ↓
-  Gemini 2.0 Flash → analisa em português
-        ↓
-  Gera reports/YYYY-MM-DD.md
-  Atualiza historico.csv
-  Commit automático no repositório
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+# Alternatively, install the main packages directly:
+pip install requests google-generativeai fpdf2
 ```
 
----
+3. Configure Environment Variables:
+```bash
+export GEMINI_API_KEY="your-gemini-key"
+export NVD_API_KEY="your-nvd-key"
+```
 
-## Stack
+4. Execute the pipeline:
+```bash
+python scraper.py
+```
 
-| Tecnologia | Função |
-|---|---|
-| Python 3.11 | Script principal |
-| NVD API (NIST) | Fonte oficial de CVEs |
-| Gemini 2.0 Flash | Análise com IA em pt-BR |
-| GitHub Actions | Agendamento e commit automático |
+## Generated Artifacts
 
----
-
-## Relatórios
-
-Os relatórios diários ficam na pasta [`/reports`](./reports), um arquivo `.md` por dia.
-
-Cada CVE encontrado aparece com:
-- 🔴 CRITICAL ou 🟠 HIGH
-- Score CVSS (0–10)
-- Explicação em português pelo Gemini
-- Software afetado e recomendação de ação
-- Links de referência
+- **PDF Reports**: Stored in `pdf_reports/`, these documents provide formal and detailed breakdowns of the most critical daily vulnerabilities.
+- **CSV Database**: Found at `dashboards/historico.csv`, useful for integrating with SIEMs or BI tools.
+- **HTML Dashboard**: A minimal web representation stored at `dashboards/index.html`.
 
 ---
-
-## Histórico
-
-O arquivo [`historico.csv`](./historico.csv) registra todos os CVEs encontrados com data, ID, score e severidade — útil para acompanhar tendências ao longo do tempo.
-
----
-
-## Executar manualmente
-
-Vá em **Actions → 🛡️ Sentinel SecOps — CVE Monitor → Run workflow**.
-
----
-
-*Projeto de portfólio — automação de segurança com IA | by [Pedro](https://github.com/Pedroxious)*
+*Developed and maintained by Pedroxious.*

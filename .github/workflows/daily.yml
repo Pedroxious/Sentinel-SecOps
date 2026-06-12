@@ -1,4 +1,4 @@
-name: 🛡️ Sentinel SecOps — CVE Monitor
+name: Sentinel SecOps - Threat Intel Monitor
 
 on:
   schedule:
@@ -7,11 +7,8 @@ on:
     - cron: '0 20 * * *'  # 17:00 Brasília
   workflow_dispatch:       # permite rodar manualmente pelo GitHub
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 jobs:
   sentinel:
@@ -22,27 +19,27 @@ jobs:
       contents: write
 
     steps:
-      - name: 📥 Checkout do repositório
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 🐍 Configurar Python 3.11
+      - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: 📦 Instalar dependências
-        run: pip install requests google-generativeai
+      - name: Install Dependencies
+        run: pip install requests google-generativeai fpdf2
 
-      - name: 🛡️ Rodar Sentinel SecOps
+      - name: Run Sentinel SecOps
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           NVD_API_KEY:    ${{ secrets.NVD_API_KEY }}
         run: python scraper.py
 
-      - name: 💾 Commit automático
+      - name: Commit and Push Changes
         run: |
           git config --global user.name  "Sentinel SecOps Bot"
           git config --global user.email "sentinel-bot@users.noreply.github.com"
           git add -A
-          git diff --staged --quiet || git commit -m "🔐 Sentinel SecOps — $(TZ='America/Sao_Paulo' date '+%Y-%m-%d %H:%M') (Brasília)"
+          git diff --staged --quiet || git commit -m "Auto-update: Threat Intel Report $(TZ='America/Sao_Paulo' date '+%Y-%m-%d %H:%M')"
           git push
