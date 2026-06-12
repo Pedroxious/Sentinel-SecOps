@@ -467,6 +467,22 @@ def get_next_dashboard_number():
     return max(numbers) + 1
 
 
+def get_dashboard_info(filename):
+    import re
+    filepath = f"dashboards/{filename}"
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            content = f.read(2000)
+            m = re.search(r"<span>(.*?)</span>", content)
+            if m:
+                # Remove HTML tags, clean up
+                date_text = m.group(1).replace("<br>", " ").replace("</br>", " ").strip()
+                return date_text
+    except Exception:
+        pass
+    # Fallback to filename without extension
+    return filename[:-5]
+
 def generate_dashboard(cves_analyzed, date_str, hour_str):
     """Cria um arquivo de dashboard HTML dinâmico, interativo e com design premium."""
     num = get_next_dashboard_number()
@@ -679,7 +695,7 @@ def generate_dashboard(cves_analyzed, date_str, hour_str):
 
         .filters-grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 1rem;
         }}
 
@@ -1036,6 +1052,12 @@ def generate_dashboard(cves_analyzed, date_str, hour_str):
                         <option value="não">Sem Correção (Não)</option>
                     </select>
                 </div>
+                <div class="filter-group">
+                    <label for="history-filter">Histórico</label>
+                    <select id="history-filter" class="filter-control" onchange="if(this.value && this.value !== '#') window.location.href=this.value;">
+                        {history_options}
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -1111,8 +1133,78 @@ def generate_dashboard(cves_analyzed, date_str, hour_str):
 </body>
 </html>"""
 
+    # Scan dashboards directory for all files
+    os.makedirs("dashboards", exist_ok=True)
+    files = os.listdir("dashboards")
+    dashboard_files = []
+    for f in files:
+        if f.startswith("html") and f.endswith(".html"):
+            try:
+                n = int(f[4:-5])
+                dashboard_files.append((n, f))
+            except ValueError:
+                pass
+                
+    # We will ALSO include the current one being generated right now, since it hasn't been written to disk yet
+    # but we want it to show up in the history list!
+    current_filename = f"html{num}.html"
+    if (num, current_filename) not in dashboard_files:
+        dashboard_files.append((num, current_filename))
+        
+    dashboard_files.sort(key=lambda x: x[0], reverse=True)
+    
+    # 1. Build options for dashboards/html{num}.html
+    dash_options = []
+    # Link to the main page (Dashboard Atual) at the top of the history list
+    dash_options.append('<option value="../index.html">🖥️ Dashboard Atual (Mais Recente)</option>')
+    for n, f in dashboard_files:
+        date_info = get_dashboard_info(f) if f != current_filename else f"{date_str} {hour_str}"
+        selected_str = "selected" if n == num else ""
+        dash_options.append(f'<option value="{f}" {selected_str}>📅 Dashboard {date_info} (#{n})</option>')
+    dash_options_str = "\n".join(dash_options)
+    
+    # 2. Build options for index.html at root
+    idx_options = []
+    idx_options.append('<option value="#" selected>🖥️ Dashboard Atual (Mais Recente)</option>')
+    for n, f in dashboard_files:
+        date_info = get_dashboard_info(f) if f != current_filename else f"{date_str} {hour_str}"
+        idx_options.append(f'<option value="dashboards/{f}">📅 Dashboard {date_info} (#{n})</option>')
+    idx_options_str = "\n".join(idx_options)
+
+    # Generate HTML content for dashboards/html{num}.html (with relative links)
+    html_dashboard = html_template.format(
+        date_str=date_str,
+        hour_str=hour_str,
+        total_count=total_count,
+        critical_count=critical_count,
+        high_count=high_count,
+        patch_count=patch_count,
+        no_patch_count=no_patch_count,
+        cards_html=cards_html,
+        history_options=dash_options_str
+    )
+    
+    # Save dashboards/html{num}.html
     with open(filepath, "w", encoding="utf-8") as f:
-        f.write(html_template)
+        f.write(html_dashboard)
+        
+    # Generate HTML content for index.html at root
+    html_index = html_template.format(
+        date_str=date_str,
+        hour_str=hour_str,
+        total_count=total_count,
+        critical_count=critical_count,
+        high_count=high_count,
+        patch_count=patch_count,
+        no_patch_count=no_patch_count,
+        cards_html=cards_html,
+        history_options=idx_options_str
+    )
+    
+    # Save index.html
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(html_index)
+        
     return num
 
 
@@ -1132,7 +1224,7 @@ def update_readme(date_str, hour_str, count, dashboard_num, status_badge):
     new_badge = (
         f"> 🕐 **Última atualização:** {date_str} às {hour_str} (Brasília) "
         f"| 📊 **Status:** {status_badge} ({count} novos) "
-        f"| 🖥️ **[Dashboard Atual](./dashboards/html{dashboard_num}.html)**"
+        f"| 🖥️ **[Dashboard Atual](./index.html)**"
     )
 
     lines = content.split("\n")
