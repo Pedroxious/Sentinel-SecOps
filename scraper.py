@@ -1,1368 +1,1132 @@
 import os
-import json
 import requests
+import json
+import time
 import csv
-from datetime import datetime, timedelta, timezone
-
+from datetime import datetime, timezone, timedelta
 import google.generativeai as genai
+from collections import OrderedDict
 
-# ─── Config ───────────────────────────────────────────────────────────────────
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-NVD_API_KEY    = os.environ.get("NVD_API_KEY", "")
+# ==========================================
+# CONFIGURAÇÕES E CHAVES DE API
+# ==========================================
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+NVD_API_KEY    = os.getenv("NVD_API_KEY")
 
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel("gemini-2.0-flash")
-else:
-    model = None
+genai.configure(api_key=GEMINI_API_KEY)
 
+# Usa o modelo Gemini 2.0 Flash
+MODEL_NAME = "gemini-2.0-flash"
+model = genai.GenerativeModel(MODEL_NAME)
 
-# ─── 0. Migração do CSV ───────────────────────────────────────────────────────
+# ─── 1. Migração de CSV (de 10 ou 14 para 19 colunas) ──────────────────────────
 def migrate_csv():
-    """Migra o historico.csv do formato de 4 colunas para o de 10 colunas."""
-    filepath = "historico.csv"
-    if not os.path.exists(filepath):
+    """Verifica se o CSV tem o formato antigo e migra para o novo formato de 19 colunas."""
+    csv_file = "historico.csv"
+    if not os.path.exists(csv_file):
         return
 
-    try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            content = f.read().strip()
-    except Exception as e:
-        print(f"⚠️ Erro ao ler historico.csv para migração: {e}")
-        return
-
-    if not content:
-        return
-
-    lines = content.split("\n")
-    header = [h.strip() for h in lines[0].split(",")]
+    needs_migration = False
+    rows = []
     
-    new_header = [
-        "data", "hora", "cve_id", "score", "severidade", 
-        "setor", "software", "tem_patch", "exploitabilidade", "resumo"
-    ]
-
-    # Se o cabeçalho tiver menos colunas, migra
-    if len(header) < len(new_header):
-        print("📊 Detectado historico.csv antigo. Migrando para o formato de 10 colunas...")
-        rows = []
+    with open(csv_file, mode="r", encoding="utf-8") as f:
+        reader = csv.reader(f)
         try:
-            reader = csv.DictReader(lines)
-            for row in reader:
-                new_row = {
-                    "data": row.get("data", "").strip(),
-                    "hora": "00:00",
-                    "cve_id": row.get("cve_id", "").strip(),
-                    "score": row.get("score", "").strip(),
-                    "severidade": row.get("severidade", "").strip(),
-                    "setor": "Other",
-                    "software": "N/A",
-                    "tem_patch": "não",
-                    "exploitabilidade": "Média",
-                    "resumo": "N/A"
-                }
-                rows.append(new_row)
-        except Exception as e:
-            print(f"❌ Erro ao parsear CSV antigo: {e}")
+            header = next(reader)
+        except StopIteration:
             return
+            
+        if len(header) < 19:
+            needs_migration = True
+        
+        for row in reader:
+            rows.append(row)
+            
+    if needs_migration:
+        print(f"🔄 Atualizando {csv_file} para 19 colunas...")
+        new_header = [
+            "data", "hora", "cve_id", "score", "severidade", 
+            "priority_score", "priority_rating", "in_cisa_kev", "epss",
+            "cwe_id", "attack_vector", "attack_complexity",
+            "ransomware_known", "ioc_count",
+            "setor", "software", "tem_patch", "exploitabilidade", "resumo"
+        ]
+        
+        with open(csv_file, mode="w", encoding="utf-8", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(new_header)
+            
+            for row in rows:
+                # Pad row if necessary to avoid index errors
+                row = row + [""] * (19 - len(row))
+                
+                # Assign values based on old format guess (10, 14, or mixed)
+                data = row[0]
+                hora = row[1]
+                cve_id = row[2]
+                score = row[3]
+                sev = row[4]
+                
+                # If it was a 10 column, it might have setor at 5
+                if len(row) <= 10:
+                    pri_s = "0.0"
+                    pri_r = "MÉDIA"
+                    kev = "False"
+                    epss = "0.0"
+                    cwe = "N/A"
+                    av = "UNKNOWN"
+                    ac = "UNKNOWN"
+                    rk = "não"
+                    ioc = "0"
+                    setor = row[5] if len(row)>5 else "Other"
+                    soft = row[6] if len(row)>6 else "N/A"
+                    patch = row[7] if len(row)>7 else "não"
+                    expl = row[8] if len(row)>8 else "Média"
+                    res = row[9] if len(row)>9 else ""
+                elif len(row) <= 14:
+                    pri_s = row[5]
+                    pri_r = row[6]
+                    kev = row[7]
+                    epss = row[8]
+                    cwe = "N/A"
+                    av = "UNKNOWN"
+                    ac = "UNKNOWN"
+                    rk = "não"
+                    ioc = "0"
+                    setor = row[9]
+                    soft = row[10]
+                    patch = row[11]
+                    expl = row[12]
+                    res = row[13]
+                else:
+                    # It's somewhat between 15 and 19? Just use what we have
+                    pri_s = row[5]
+                    pri_r = row[6]
+                    kev = row[7]
+                    epss = row[8]
+                    cwe = row[9] or "N/A"
+                    av = row[10] or "UNKNOWN"
+                    ac = row[11] or "UNKNOWN"
+                    rk = row[12] or "não"
+                    ioc = row[13] or "0"
+                    setor = row[14]
+                    soft = row[15]
+                    patch = row[16]
+                    expl = row[17]
+                    res = row[18]
+                
+                writer.writerow([
+                    data, hora, cve_id, score, sev,
+                    pri_s, pri_r, kev, epss,
+                    cwe, av, ac, rk, ioc,
+                    setor, soft, patch, expl, res
+                ])
+        print("✅ Migração concluída com sucesso.")
 
-        try:
-            with open(filepath, "w", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=new_header)
-                writer.writeheader()
-                for r in rows:
-                    writer.writerow(r)
-            print("✅ historico.csv migrado com sucesso!")
-        except Exception as e:
-            print(f"❌ Erro ao escrever historico.csv migrado: {e}")
 
-
-# ─── 1. Busca CVEs na NVD ─────────────────────────────────────────────────────
+# ─── 2. Busca na API do NVD ────────────────────────────────────────────────
 def get_cves():
-    """Busca CVEs publicados nas últimas 8 horas."""
-    now   = datetime.now(timezone.utc)
-    start = now - timedelta(hours=8)
-
+    """Busca CVEs das últimas horas na API v2 do NVD."""
+    # Como as actions rodam de 6 em 6 ou 8 em 8, pego as últimas 8h
+    now = datetime.now(timezone.utc)
+    start_time = now - timedelta(hours=8)
+    
+    url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
     params = {
-        "pubStartDate": start.strftime("%Y-%m-%dT%H:%M:%S.000"),
-        "pubEndDate":   now.strftime("%Y-%m-%dT%H:%M:%S.000"),
+        "pubStartDate": start_time.strftime("%Y-%m-%dT%H:%M:%S.000%z").replace("+0000", "Z"),
+        "pubEndDate": now.strftime("%Y-%m-%dT%H:%M:%S.000%z").replace("+0000", "Z")
     }
+    headers = {"apiKey": NVD_API_KEY} if NVD_API_KEY else {}
 
-    headers = {}
-    if NVD_API_KEY:
-        headers["apiKey"] = NVD_API_KEY
-
-    resp = requests.get(
-        "https://services.nvd.nist.gov/rest/json/cves/2.0",
-        params=params,
-        headers=headers,
-        timeout=30,
-    )
-    resp.raise_for_status()
-    return resp.json().get("vulnerabilities", [])
+    print(f"📡 Buscando CVEs publicados desde {params['pubStartDate']}...")
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=20)
+        response.raise_for_status()
+        data = response.json()
+        return data.get("vulnerabilities", [])
+    except Exception as e:
+        print(f"⚠️ Erro ao acessar NVD: {e}")
+        return []
 
 
-# ─── 2. Filtra HIGH e CRITICAL ────────────────────────────────────────────────
-def filter_critical(cves):
-    """Mantém apenas CVEs com severidade HIGH ou CRITICAL."""
-    filtered = []
-
-    for item in cves:
-        cve     = item.get("cve", {})
+# ─── 3. Filtro de Severidade CRITICAL e HIGH com detalhes ─────────────────
+def filter_critical(vulnerabilities):
+    """Filtra apenas CVEs com baseScore >= 7.0 (HIGH/CRITICAL) e extrai mais detalhes."""
+    critical_cves = []
+    
+    for item in vulnerabilities:
+        cve = item.get("cve", {})
         metrics = cve.get("metrics", {})
+        
+        # Pega a descrição em inglês
+        desc = "N/A"
+        for d in cve.get("descriptions", []):
+            if d.get("lang") == "en":
+                desc = d.get("value")
+                break
+                
+        # Extrai pontuação CVSS 3.1, ou 3.0, ou 2
+        score = 0
+        severity = "UNKNOWN"
+        for key in ("cvssMetricV31", "cvssMetricV30", "cvssMetricV2"):
+            entries = metrics.get(key, [])
+            if entries:
+                cvss_data = entries[0]["cvssData"]
+                score = cvss_data.get("baseScore", 0)
+                severity = cvss_data.get("baseSeverity", entries[0].get("baseSeverity", "UNKNOWN"))
+                break
 
-        score    = None
-        severity = None
+        # Extrai CWE
+        cwe_id = "N/A"
+        weaknesses = cve.get("weaknesses", [])
+        if weaknesses:
+            for w in weaknesses:
+                for d in w.get("description", []):
+                    if d.get("lang") == "en" and d.get("value", "").startswith("CWE-"):
+                        cwe_id = d["value"]
+                        break
+                if cwe_id != "N/A":
+                    break
 
+        # Extrai Vetor e Complexidade de Ataque
+        attack_vector = "UNKNOWN"
+        attack_complexity = "UNKNOWN"
         for key in ("cvssMetricV31", "cvssMetricV30"):
             entries = metrics.get(key, [])
             if entries:
-                score    = entries[0]["cvssData"]["baseScore"]
-                severity = entries[0]["cvssData"]["baseSeverity"]
+                cvss_data = entries[0]["cvssData"]
+                attack_vector = cvss_data.get("attackVector", "UNKNOWN")
+                attack_complexity = cvss_data.get("attackComplexity", "UNKNOWN")
                 break
-
-        if score is None:
-            entries = metrics.get("cvssMetricV2", [])
-            if entries:
-                score    = entries[0]["cvssData"]["baseScore"]
-                severity = "HIGH" if float(score) >= 7.0 else "MEDIUM"
-
-        if severity in ("HIGH", "CRITICAL") and score is not None:
-            desc = next(
-                (d["value"] for d in cve.get("descriptions", []) if d.get("lang") == "en"),
-                "No description available.",
-            )
-            filtered.append({
-                "id":          cve.get("id"),
+                
+        if score >= 7.0: # Apenas HIGH (7.0-8.9) e CRITICAL (9.0-10.0)
+            # Extrai URLs de referência
+            refs = [r["url"] for r in cve.get("references", [])]
+            
+            critical_cves.append({
+                "id": cve["id"],
                 "description": desc,
-                "score":       score,
-                "severity":    severity,
-                "published":   cve.get("published", ""),
-                "references":  [r.get("url") for r in cve.get("references", [])[:3]],
+                "score": score,
+                "severity": severity,
+                "cwe_id": cwe_id,
+                "attack_vector": attack_vector,
+                "attack_complexity": attack_complexity,
+                "references": refs
             })
+            
+    return critical_cves
 
-    # Retorna os 10 mais graves
-    return sorted(filtered, key=lambda x: x["score"], reverse=True)[:10]
+
+# ─── 4. Integração CISA KEV e EPSS ────────────────────────────────────────
+def get_cisa_kev_cves():
+    """Busca o catálogo CISA KEV com dados de ransomware e ações requeridas."""
+    print("🔍 Baixando catálogo CISA KEV atualizado...")
+    try:
+        resp = requests.get("https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json", timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        kev_data = {}
+        for vuln in data.get("vulnerabilities", []):
+            kev_data[vuln["cveID"]] = {
+                "ransomware_known": vuln.get("knownRansomwareCampaignUse", "Unknown"),
+                "required_action": vuln.get("requiredAction", "N/A"),
+                "due_date": vuln.get("dueDate", "N/A"),
+            }
+        print(f"   ✅ {len(kev_data)} CVEs conhecidamente exploradas carregadas do CISA.")
+        return kev_data
+    except Exception as e:
+        print(f"⚠️ Erro ao buscar CISA KEV: {e}")
+        return {}
 
 
-# ─── 3. Analisa em Batch com Gemini ───────────────────────────────────────────
+def get_epss_scores(cve_ids):
+    """Busca o EPSS (Exploit Prediction Scoring System) para os CVEs no FIRST."""
+    if not cve_ids:
+        return {}
+    
+    print(f"🔍 Consultando API FIRST EPSS para {len(cve_ids)} vulnerabilidades...")
+    results = {}
+    
+    # EPSS API suporta consultar múltiplos CVEs separados por vírgula
+    chunk_size = 100
+    for i in range(0, len(cve_ids), chunk_size):
+        chunk = cve_ids[i:i+chunk_size]
+        cves_param = ",".join(chunk)
+        
+        try:
+            resp = requests.get(f"https://api.first.org/data/v1/epss?cve={cves_param}", timeout=10)
+            if resp.status_code == 200:
+                data = resp.json()
+                for item in data.get("data", []):
+                    results[item["cve"]] = {
+                        "epss": float(item["epss"]),
+                        "percentile": float(item["percentile"])
+                    }
+        except Exception as e:
+            print(f"   ⚠️ Erro ao buscar EPSS (chunk): {e}")
+            
+    return results
+
+
+# ─── 4.5 Novas APIs de Enriquecimento (ThreatFox e GitHub) ───────────────
+def get_threatfox_iocs(cve_ids):
+    """Busca IOCs (Indicators of Compromise) associados aos CVEs via ThreatFox (abuse.ch)."""
+    results = {}
+    for cve_id in cve_ids:
+        try:
+            # Note: ThreatFox doesn't strictly search CVEs via search_ioc effectively without an API key,
+            # but we implement it as requested. Often returns nothing without the right tags.
+            resp = requests.post(
+                "https://threatfox-api.abuse.ch/api/v1/",
+                json={"query": "search_ioc", "search_term": cve_id},
+                timeout=8
+            )
+            data = resp.json()
+            if data.get("query_status") == "ok" and data.get("data"):
+                iocs = data["data"]
+                results[cve_id] = {
+                    "count": len(iocs),
+                    "ioc_types": list(set(i.get("ioc_type", "") for i in iocs[:10])),
+                    "malware_families": list(set(i.get("malware_printable", "") for i in iocs[:10] if i.get("malware_printable")))
+                }
+            else:
+                results[cve_id] = {"count": 0, "ioc_types": [], "malware_families": []}
+        except Exception as e:
+            # Supress detailed error to avoid spam
+            results[cve_id] = {"count": 0, "ioc_types": [], "malware_families": []}
+    return results
+
+
+def get_github_advisories(cve_ids):
+    """Busca advisories do GitHub Security Advisory Database (GHSA). Sem autenticação."""
+    results = {}
+    for cve_id in cve_ids:
+        try:
+            resp = requests.get(
+                "https://api.github.com/advisories",
+                params={"cve_id": cve_id},
+                headers={"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"},
+                timeout=8
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                if data:
+                    adv = data[0]
+                    results[cve_id] = {
+                        "ghsa_id": adv.get("ghsa_id", ""),
+                        "severity": adv.get("severity", ""),
+                        "summary": adv.get("summary", "")[:200],
+                        "url": adv.get("html_url", "")
+                    }
+                else:
+                    results[cve_id] = None
+            else:
+                results[cve_id] = None
+        except Exception as e:
+            results[cve_id] = None
+        time.sleep(0.5) # Respeita o rate limit (60/hr unauth) ou se possivel n exagerar
+    return results
+
+
+# ─── 5. Cálculo de Priorização Híbrida ────────────────────────────────────
+def calculate_priority_score(cve_id, cvss_score, in_cisa_kev, epss_data,
+                             ransomware_known=False, ioc_count=0,
+                             attack_vector="UNKNOWN", attack_complexity="UNKNOWN"):
+    cvss = float(cvss_score)
+    # CVSS pesa 40% (máx 4.0)
+    cvss_points = cvss * 0.4
+    # CISA KEV pesa 25% (2.5 pontos)
+    kev_points = 2.5 if in_cisa_kev else 0.0
+    # EPSS pesa 10% (1.0 ponto)
+    epss_prob = epss_data.get("epss", 0.0) if epss_data else 0.0
+    epss_points = epss_prob * 1.0
+    # Ransomware pesa 10% (1.0 ponto)
+    ransomware_points = 1.0 if ransomware_known else 0.0
+    # IOCs pesa 5% (0.5 ponto)
+    ioc_points = 0.5 if ioc_count > 0 else 0.0
+    # Network + Low complexity pesa 10% (1.0 ponto)
+    net_points = 0.0
+    if attack_vector == "NETWORK":
+        net_points += 0.5
+    if attack_complexity == "LOW":
+        net_points += 0.5
+    
+    priority_score = min(10.0, cvss_points + kev_points + epss_points + ransomware_points + ioc_points + net_points)
+    
+    if priority_score >= 8.5:
+        priority_rating = "IMEDIATA"
+    elif priority_score >= 7.0:
+        priority_rating = "CRÍTICA"
+    elif priority_score >= 5.0:
+        priority_rating = "ALTA"
+    else:
+        priority_rating = "MÉDIA"
+    
+    return priority_score, priority_rating
+
+
+# ─── 6. Integração com Gemini ─────────────────────────────────────────────
 def parse_json_response(text):
-    """Extrai e parseia o array JSON da resposta do Gemini."""
+    """Limpa o texto do Gemini e extrai o JSON."""
     text = text.strip()
     if text.startswith("```json"):
         text = text[7:]
-    elif text.startswith("```"):
-        text = text[3:]
     if text.endswith("```"):
         text = text[:-3]
-    text = text.strip()
-    return json.loads(text)
+    return json.loads(text.strip())
 
-
-def analyze_batch_with_gemini(cves, yesterday_report_content=""):
-    """Pede ao Gemini uma análise em batch e estruturada dos CVEs."""
-    if not model:
-        raise ValueError("Gemini model não configurado. Verifique GEMINI_API_KEY.")
-
+def analyze_batch_with_gemini(cves, start_idx, end_idx):
+    """Envia um lote de CVEs para o Gemini analisar."""
+    print(f"🤖 Solicitando análise do Gemini (Lote {start_idx+1} até {end_idx})...")
+    
     cves_input = []
-    for c in cves:
+    for c in cves[start_idx:end_idx]:
         cves_input.append({
             "id": c["id"],
             "description": c["description"],
             "score": c["score"],
             "severity": c["severity"],
+            "cwe_id": c.get("cwe_id", "N/A"),
+            "attack_vector": c.get("attack_vector", "UNKNOWN"),
+            "attack_complexity": c.get("attack_complexity", "UNKNOWN"),
+            "priority_score": f"{c['priority_score']:.1f}",
+            "priority_rating": c["priority_rating"],
+            "in_cisa_kev": "sim" if c["in_cisa_kev"] else "não",
+            "ransomware_known": "sim" if c.get("ransomware_known") else "não",
+            "ioc_count": c.get("ioc_count", 0),
+            "epss": f"{c['epss_data'].get('epss', 0.0)*100:.3f}%",
+            "ghsa_id": c.get("ghsa_data", {}).get("ghsa_id", "") if c.get("ghsa_data") else "",
             "references": c["references"]
         })
-        
-    cves_json_str = json.dumps(cves_input, indent=2, ensure_ascii=False)
+
+    prompt = f"""
+    Você é um especialista em CyberSecOps da Sentinel. Analise detalhadamente estas {len(cves_input)} vulnerabilidades recém publicadas.
+    Eles possuem inteligência combinada de CVSS, EPSS, CISA KEV, Ransomware ThreatFox e GitHub.
     
-    yesterday_context = ""
-    if yesterday_report_content:
-        # Limita o tamanho do relatório de ontem para evitar estouro de tokens
-        yesterday_context = f"\nConteúdo do relatório de ontem (para comparação de novos patches, criticidade ou reincidências):\n{yesterday_report_content[:5000]}\n"
-        
-    prompt = f"""Você é um especialista em SecOps de alta senioridade.
-Sua tarefa é analisar em lote (batch) os seguintes CVEs publicados recentemente.
-
-{yesterday_context}
-
-Lista de CVEs a analisar:
-{cves_json_str}
-
-Instruções importantes:
-1. Filtre ruídos: Avalie a relevância/importância real de cada vulnerabilidade. Softwares obsoletos, muito específicos ou de baixo impacto prático devem ser marcados como "relevante": false. Apenas vulnerabilidades que realmente valem a atenção de uma equipe de SecOps devem ter "relevante": true.
-2. Modo Ultra-resumido: O resumo deve ter exatamente 3 linhas explicativas curtas e em português (brasileiro):
-   - Linha 1: O que é a vulnerabilidade.
-   - Linha 2: Quem ou o que ela afeta.
-   - Linha 3: O que fazer para se proteger ou mitigar.
-3. Classifique o setor: Escolha EXATAMENTE um dos seguintes: Windows | Linux | Web | Database | Network | Mobile | Cloud | Other.
-4. Detecte patch: Analise a descrição e referências para indicar se há correção/patch disponível ("sim" ou "não").
-5. Exploitabilidade: Avalie a facilidade de exploração prática como "Baixa", "Média" ou "Alta", acompanhado de uma justificativa curta.
-6. Comparação com ontem: Se a vulnerabilidade foi mencionada no relatório de ontem e teve atualizações importantes (como novo patch ou gravidade maior) ou se é uma reincidência, explique em uma frase curta no campo "comparacao_ontem". Se não houve alterações ou não se aplica, coloque null.
-
-Retorne EXATAMENTE um array JSON contendo um objeto para cada CVE analisado no seguinte formato (sem explicações antes ou depois do JSON):
-[
-  {{
-    "cve_id": "CVE-YYYY-XXXX",
-    "relevante": true,
-    "setor": "Web",
-    "software": "Apache HTTP Server 2.4.58",
-    "tem_patch": "sim",
-    "exploitabilidade": "Alta",
-    "justificativa_exploitabilidade": "Exploit público disponível e execução remota de código simples.",
-    "resumo_o_que_e": "O que é...",
-    "resumo_quem_afeta": "Quem afeta...",
-    "resumo_o_que_fazer": "O que fazer...",
-    "comparacao_ontem": null
-  }}
-]
-"""
-
-    try:
-        response = model.generate_content(
-            prompt,
-            generation_config={"response_mime_type": "application/json"}
-        )
-        return parse_json_response(response.text)
-    except Exception as e:
-        print(f"⚠️ Erro na análise em lote: {e}. Tentando fallback individual...")
-        # Fallback para análise individual caso o batch completo falhe
-        analyzed_list = []
-        for cve in cves:
-            try:
-                single_prompt = f"""Você é um especialista em SecOps. Analise o seguinte CVE de forma individual e retorne no formato JSON descrito.
-                
-                CVE: {json.dumps(cve, ensure_ascii=False)}
-                
-                Retorne um objeto JSON com as chaves:
-                - "cve_id": "{cve['id']}"
-                - "relevante": true
-                - "setor": "Windows | Linux | Web | Database | Network | Mobile | Cloud | Other"
-                - "software": nome do software afetado
-                - "tem_patch": "sim" ou "não"
-                - "exploitabilidade": "Baixa" ou "Média" ou "Alta"
-                - "justificativa_exploitabilidade": justificativa
-                - "resumo_o_que_e": "O que é"
-                - "resumo_quem_afeta": "Quem afeta"
-                - "resumo_o_que_fazer": "O que fazer"
-                - "comparacao_ontem": null
-                """
-                resp = model.generate_content(
-                    single_prompt,
-                    generation_config={"response_mime_type": "application/json"}
-                )
-                data = json.loads(resp.text.strip())
-                analyzed_list.append(data)
-            except Exception as ex:
-                print(f"❌ Erro no fallback do CVE {cve['id']}: {ex}")
-                analyzed_list.append({
-                    "cve_id": cve["id"],
-                    "relevante": True,
-                    "setor": "Other",
-                    "software": "N/A",
-                    "tem_patch": "não",
-                    "exploitabilidade": "Média",
-                    "justificativa_exploitabilidade": "Não analisado devido a erro.",
-                    "resumo_o_que_e": cve["description"][:100],
-                    "resumo_quem_afeta": "N/A",
-                    "resumo_o_que_fazer": "Consulte as referências.",
-                    "comparacao_ontem": None
-                })
-        return analyzed_list
-
-
-# ─── 4. Tendência Semanal ─────────────────────────────────────────────────────
-def weekly_trend(today_str):
-    """Gera um parágrafo sobre a tendência de segurança da semana."""
-    if not model or not os.path.exists("historico.csv"):
-        return ""
-
-    try:
-        today = datetime.strptime(today_str, "%Y-%m-%d")
-        start_date = today - timedelta(days=7)
-    except Exception:
-        return ""
-
-    weekly_rows = []
-    try:
-        with open("historico.csv", "r", encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                row_date_str = row.get("data")
-                if row_date_str:
-                    try:
-                        row_date = datetime.strptime(row_date_str, "%Y-%m-%d")
-                        if start_date <= row_date <= today:
-                            weekly_rows.append(row)
-                    except ValueError:
-                        pass
-    except Exception as e:
-        print(f"⚠️ Erro ao ler histórico para tendência semanal: {e}")
-        return ""
-
-    if not weekly_rows:
-        return ""
-
-    rows_text = ""
-    for r in weekly_rows:
-        rows_text += f"- Data: {r.get('data')}, CVE: {r.get('cve_id')}, Severidade: {r.get('severidade')}, Setor: {r.get('setor')}, Software: {r.get('software')}\n"
-
-    prompt = f"""Você é um analista SecOps experiente. Analise a lista de CVEs encontrados no monitoramento na última semana e gere uma análise de tendência semanal estruturada em exatamente um parágrafo claro e objetivo em português.
-Destaque:
-1. Quais foram os vetores de ataque ou setores mais visados.
-2. Quais sistemas/softwares foram mais afetados.
-3. Qual a recomendação geral de segurança para a infraestrutura.
-
-Lista de CVEs da semana:
-{rows_text}
-
-Forneça APENAS o parágrafo de texto corrido (sem títulos, sem cabeçalhos e sem marcações markdown como negrito no início)."""
-
-    try:
-        response = model.generate_content(prompt)
-        return response.text.strip()
-    except Exception as e:
-        print(f"⚠️ Erro ao gerar tendência semanal com o Gemini: {e}")
-        return ""
-
-
-# ─── 5. Gera relatório .md ────────────────────────────────────────────────────
-def get_yesterday_report_content(brasilia):
-    """Busca o conteúdo do relatório de ontem se houver."""
-    yesterday = brasilia - timedelta(days=1)
-    yesterday_str = yesterday.strftime("%Y-%m-%d")
-    filepath = f"reports/{yesterday_str}.md"
-    if os.path.exists(filepath):
-        try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                return f.read()
-        except Exception as e:
-            print(f"⚠️ Erro ao ler relatório de ontem: {e}")
-    return ""
-
-
-def generate_report(cves_analyzed, date_str, hour_str, trend_paragraph=""):
-    """Escreve as análises no relatório .md diário."""
-    os.makedirs("reports", exist_ok=True)
-    filepath = f"reports/{date_str}.md"
-    mode     = "a" if os.path.exists(filepath) else "w"
-
-    with open(filepath, mode, encoding="utf-8") as f:
-        if mode == "w":
-            f.write(f"# 🔐 Sentinel SecOps — {date_str}\n\n")
-            f.write("*Daily SecOps intelligence — automated CVE monitoring, AI-powered threat analysis & vulnerability insights*\n\n")
-            f.write("---\n\n")
-            
-            if trend_paragraph:
-                f.write(f"## 📊 Análise de Tendência Semanal\n\n")
-                f.write(f"{trend_paragraph}\n\n")
-                f.write("---\n\n")
-
-        f.write(f"## 🕐 Atualização das {hour_str} (Brasília)\n\n")
-
-        if not cves_analyzed:
-            f.write("✅ Nenhuma vulnerabilidade **HIGH** ou **CRITICAL** publicada neste período.\n\n")
-            return
-
-        f.write(f"> ⚠️ **{len(cves_analyzed)} vulnerabilidade(s) encontrada(s)**\n\n")
-
-        for item in cves_analyzed:
-            cve      = item["cve"]
-            analysis = item["analysis_raw"]
-            emoji    = "🔴" if cve["severity"] == "CRITICAL" else "🟠"
-
-            f.write(f"### {emoji} [{cve['id']}](https://nvd.nist.gov/vuln/detail/{cve['id']}) — Score: `{cve['score']}/10` ({cve['severity']})\n\n")
-            
-            f.write(f"**O que é:** {analysis.get('resumo_o_que_e', '')}\n")
-            f.write(f"**Quem afeta:** {analysis.get('resumo_quem_afeta', '')}\n")
-            f.write(f"**O que fazer:** {analysis.get('resumo_o_que_fazer', '')}\n\n")
-            
-            f.write(f"- **Setor:** `{analysis.get('setor', 'Other')}`\n")
-            f.write(f"- **Software afetado:** {analysis.get('software', 'N/A')}\n")
-            f.write(f"- **Correção disponível (Patch):** `{analysis.get('tem_patch', 'não')}`\n")
-            f.write(f"- **Exploitabilidade:** `{analysis.get('exploitabilidade', 'Média')}` ({analysis.get('justificativa_exploitabilidade', '')})\n")
-            
-            if analysis.get("comparacao_ontem"):
-                f.write(f"- **Comparação com ontem:** {analysis['comparacao_ontem']}\n")
-                
-            f.write("\n")
-
-            if cve["references"]:
-                f.write("**Referências:**\n")
-                for ref in cve["references"]:
-                    f.write(f"- {ref}\n")
-
-            f.write("\n---\n\n")
-
-
-# ─── 6. Atualiza historico.csv ────────────────────────────────────────────────
-def update_csv(cves_analyzed, date_str, hour_str):
-    """Registra os novos CVEs analisados no CSV de histórico."""
-    filepath = "historico.csv"
-    file_exists = os.path.exists(filepath)
+    Dados de entrada JSON:
+    {json.dumps(cves_input)}
     
-    existing_cves = set()
-    if file_exists:
-        try:
-            with open(filepath, "r", encoding="utf-8") as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    cid = row.get("cve_id")
-                    if cid:
-                        existing_cves.add(cid)
-        except Exception as e:
-            print(f"⚠️ Erro ao ler CVEs existentes do histórico: {e}")
-
-    new_header = [
-        "data", "hora", "cve_id", "score", "severidade", 
-        "setor", "software", "tem_patch", "exploitabilidade", "resumo"
+    Para cada CVE fornecido, retorne APENAS um array JSON válido contendo objetos com esta estrutura:
+    [
+      {{
+        "id": "CVE-XXXX-XXXX",
+        "setor": "Windows/Linux/Web/Database/Network/Mobile/Cloud/Other",
+        "software": "Nome do software/produto afetado (ex: Microsoft Exchange, Apache, WordPress)",
+        "tem_patch": "sim ou não (deduza pela descrição, referencias e GitHub advisory se existe patch)",
+        "exploitabilidade": "Alta, Média ou Baixa (considere: in_cisa_kev, network, low_complexity, epss)",
+        "resumo_o_que_e": "1 frase simples e direta explicando a vulnerabilidade em PT-BR.",
+        "resumo_quem_afeta": "1 frase listando quem está vulnerável.",
+        "resumo_o_que_fazer": "1 frase com a ação imediata recomendada."
+      }}
     ]
     
-    mode = "a" if file_exists else "w"
-    with open(filepath, mode, newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=new_header)
-        if not file_exists:
-            writer.writeheader()
-            
-        for item in cves_analyzed:
-            cve = item["cve"]
-            analysis = item["analysis_raw"]
-            
-            # Garante que nunca duplica entradas na mesma execução ou anteriores
-            if cve["id"] in existing_cves:
-                continue
-                
-            resumo_str = f"O que é: {analysis.get('resumo_o_que_e', '')} | Quem afeta: {analysis.get('resumo_quem_afeta', '')} | O que fazer: {analysis.get('resumo_o_que_fazer', '')}"
-            
-            writer.writerow({
-                "data": date_str,
-                "hora": hour_str,
-                "cve_id": cve["id"],
-                "score": cve["score"],
-                "severidade": cve["severity"],
-                "setor": analysis.get("setor", "Other"),
-                "software": analysis.get("software", "N/A"),
-                "tem_patch": analysis.get("tem_patch", "não"),
-                "exploitabilidade": analysis.get("exploitabilidade", "Média"),
-                "resumo": resumo_str
-            })
-            existing_cves.add(cve["id"])
-
-
-# ─── 7. Dashboard Interativo HTML ─────────────────────────────────────────────
-def get_next_dashboard_number():
-    """Retorna o número sequencial correto para o novo dashboard."""
-    os.makedirs("dashboards", exist_ok=True)
-    files = os.listdir("dashboards")
-    numbers = []
-    for f in files:
-        if f.startswith("html") and f.endswith(".html"):
-            try:
-                num = int(f[4:-5])
-                numbers.append(num)
-            except ValueError:
-                pass
-    if not numbers:
-        return 1
-    return max(numbers) + 1
-
-
-def get_dashboard_info(filename):
-    import re
-    filepath = f"dashboards/{filename}"
+    Não inclua markdown fora do JSON. Certifique-se de que o ID bate com a entrada.
+    Se não souber deduzir o software, coloque 'N/A'.
+    """
+    
     try:
-        with open(filepath, "r", encoding="utf-8") as f:
-            content = f.read(2000)
-            m = re.search(r"<span>(.*?)</span>", content)
-            if m:
-                # Remove HTML tags, clean up
-                date_text = m.group(1).replace("<br>", " ").replace("</br>", " ").strip()
-                return date_text
-    except Exception:
-        pass
-    # Fallback to filename without extension
-    return filename[:-5]
+        response = model.generate_content(prompt)
+        return parse_json_response(response.text)
+    except Exception as e:
+        print(f"⚠️ Erro ao processar lote no Gemini: {e}")
+        try:
+            print("⏳ Tentando novamente em 15s...")
+            time.sleep(15)
+            response = model.generate_content(prompt)
+            return parse_json_response(response.text)
+        except Exception as e2:
+            print(f"❌ Falha definitiva no lote: {e2}")
+            return None
+
+
+# ─── 7. Dashboard HTML — Preset Sentinel SecOps ──────────────────────────────
+def get_dashboard_filename(date_str):
+    """Retorna o nome do arquivo do dashboard baseado na data do dia."""
+    return f"dashboard-{date_str}.html"
+
+
+def generate_manifest(date_str, cve_count, status):
+    """Gera/atualiza dashboards/manifest.json com o catálogo de todos os dashboards."""
+    os.makedirs("dashboards", exist_ok=True)
+    manifest_path = "dashboards/manifest.json"
+
+    manifest = []
+    if os.path.exists(manifest_path):
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                manifest = json.load(f)
+        except Exception:
+            manifest = []
+
+    # Remove entrada do dia atual (será recriada com dados atualizados)
+    manifest = [e for e in manifest if e.get("date") != date_str]
+
+    manifest.append({
+        "filename": get_dashboard_filename(date_str),
+        "date": date_str,
+        "cve_count": cve_count,
+        "status": status
+    })
+
+    manifest.sort(key=lambda x: x["date"], reverse=True)
+
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, indent=2, ensure_ascii=False)
+
+    return manifest
+
+
+def _build_cve_card(item):
+    """Constrói o HTML de um card CVE individual para o dashboard."""
+    cve = item["cve"]
+    analysis = item["analysis_raw"]
+    is_crit = cve["severity"] == "CRITICAL"
+
+    border_cls = "border-red-500/40 shadow-red-500/5" if is_crit else "border-amber-500/30 shadow-amber-500/5"
+    dot_cls = "bg-red-500" if is_crit else "bg-amber-500"
+    glow_cls = "glow-critical" if is_crit else ""
+    sev_badge = "bg-red-500/20 text-red-400" if is_crit else "bg-amber-500/20 text-amber-400"
+
+    priority_styles = {
+        "IMEDIATA": "bg-fuchsia-500/20 text-fuchsia-400 border-fuchsia-500/30",
+        "CRÍTICA":  "bg-red-500/20 text-red-400 border-red-500/30",
+        "ALTA":     "bg-amber-500/20 text-amber-400 border-amber-500/30",
+        "MÉDIA":    "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    }
+    pri_cls = priority_styles.get(cve["priority_rating"], priority_styles["MÉDIA"])
+
+    kev_html = ""
+    if cve["in_cisa_kev"]:
+        kev_html = (
+            '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded '
+            'text-[0.65rem] font-bold bg-red-500/20 text-red-400 border border-red-500/30 '
+            'animate-pulse">⚠ CISA KEV</span>'
+        )
+        
+    cwe_id = cve.get("cwe_id", "N/A")
+    attack_vector = cve.get("attack_vector", "UNKNOWN")
+    attack_complexity = cve.get("attack_complexity", "UNKNOWN")
+    complexity_cls = "text-red-400 border-red-500/20" if attack_complexity == "LOW" else "text-sky-400 border-sky-500/20"
+    
+    ransomware_html = ''
+    if cve.get("ransomware_known"):
+        ransomware_html = '<span class="px-2 py-0.5 rounded text-[0.65rem] font-bold bg-pink-500/15 text-pink-400 border border-pink-500/30 animate-pulse">🦠 RANSOMWARE</span>'
+        
+    ioc_html = ''
+    count = cve.get("ioc_count", 0)
+    if count > 0:
+        ioc_html = f'<span class="px-2 py-0.5 rounded text-[0.65rem] font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">🔗 {count} IOCs</span>'
+        
+    ghsa_html = ''
+    ghsa_data = cve.get("ghsa_data")
+    if ghsa_data:
+        ghsa_html = f'<a href="{ghsa_data["url"]}" target="_blank" class="px-2 py-0.5 rounded text-[0.65rem] font-medium bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 transition-colors">{ghsa_data["ghsa_id"]}</a>'
+
+
+    refs_html = ""
+    if cve.get("references"):
+        refs_links = "".join(
+            f'<a href="{ref}" target="_blank" rel="noopener" '
+            f'class="text-sentinel-cyan/70 hover:text-sentinel-cyan text-sm truncate block transition-colors">{ref}</a>'
+            for ref in cve["references"]
+        )
+        refs_html = (
+            '<div class="mt-4 pt-4 border-t border-white/5">'
+            '<p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Referências</p>'
+            f'{refs_links}</div>'
+        )
+
+    compare_html = ""
+    if analysis.get("comparacao_ontem"):
+        compare_html = (
+            f'<div class="mt-3 p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 text-sm">'
+            f'<span class="text-amber-400 font-semibold">↻ Comparação:</span> '
+            f'<span class="text-gray-300">{analysis["comparacao_ontem"]}</span></div>'
+        )
+
+    epss_val = cve["epss_data"].get("epss", 0.0) * 100
+    epss_pct = cve["epss_data"].get("percentile", 0.0) * 100
+    has_patch = analysis.get("tem_patch") == "sim"
+    patch_cls = "text-emerald-400" if has_patch else "text-red-400"
+    patch_txt = "✓ Disponível" if has_patch else "✗ Indisponível"
+    exploit = analysis.get("exploitabilidade", "Média")
+    exploit_cls = "text-red-400" if exploit == "Alta" else ("text-amber-400" if exploit == "Média" else "text-emerald-400")
+    setor = analysis.get("setor", "Other")
+    software = analysis.get("software", "N/A")
+    kev_flag = "sim" if cve["in_cisa_kev"] else "não"
+
+    return f'''<div class="glass-card rounded-2xl p-6 border {border_cls} shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cve-card {glow_cls} fade-in"
+     data-severity="{cve['severity']}" data-sector="{setor}" data-patch="{analysis.get('tem_patch', 'não')}" data-priority="{cve['priority_rating']}" data-kev="{kev_flag}" data-vector="{attack_vector}">
+    <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
+        <div class="flex items-center gap-3 flex-wrap">
+            <span class="w-2.5 h-2.5 rounded-full {dot_cls} animate-pulse"></span>
+            <a href="https://nvd.nist.gov/vuln/detail/{cve['id']}" target="_blank"
+               class="text-lg font-bold text-gray-100 hover:text-sentinel-cyan transition-colors">{cve['id']}</a>
+            <span class="px-2 py-0.5 rounded text-[0.65rem] font-bold {sev_badge}">{cve['severity']}</span>
+            <span class="px-2 py-0.5 rounded text-[0.65rem] font-semibold bg-white/5 text-gray-300 border border-white/10">CVSS {cve['score']}</span>
+            <span class="px-2 py-0.5 rounded text-[0.65rem] font-bold border {pri_cls}">{cve['priority_rating']} ({cve['priority_score']:.1f})</span>
+            {kev_html}
+        </div>
+        <span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-sentinel-cyan/10 text-sentinel-cyan border border-sentinel-cyan/20">{setor}</span>
+    </div>
+    
+    <!-- Novo TIER de Intel Indicators -->
+    <div class="flex flex-wrap gap-2 mb-3 mt-1">
+        <span class="px-2 py-0.5 rounded text-[0.65rem] font-medium bg-violet-500/10 text-violet-400 border border-violet-500/20">{cwe_id}</span>
+        <span class="px-2 py-0.5 rounded text-[0.65rem] font-medium bg-sky-500/10 text-sky-400 border border-sky-500/20">🎯 {attack_vector}</span>
+        <span class="px-2 py-0.5 rounded text-[0.65rem] font-medium {complexity_cls}">⚙ {attack_complexity}</span>
+        {ransomware_html}
+        {ioc_html}
+        {ghsa_html}
+    </div>
+    
+    <div class="mb-4 p-3 rounded-lg bg-white/[0.02] border-l-2 border-sentinel-cyan/50">
+        <p class="text-[0.65rem] text-gray-500 uppercase tracking-wider mb-1">Software Afetado</p>
+        <p class="text-sm font-medium text-gray-200">{software}</p>
+    </div>
+    <div class="space-y-2.5 mb-4">
+        <div class="flex gap-2"><span class="text-gray-500 font-medium text-sm shrink-0">O que é:</span><span class="text-sm text-gray-300">{analysis.get('resumo_o_que_e', '')}</span></div>
+        <div class="flex gap-2"><span class="text-gray-500 font-medium text-sm shrink-0">Quem afeta:</span><span class="text-sm text-gray-300">{analysis.get('resumo_quem_afeta', '')}</span></div>
+        <div class="flex gap-2"><span class="text-gray-500 font-medium text-sm shrink-0">O que fazer:</span><span class="text-sm text-gray-300">{analysis.get('resumo_o_que_fazer', '')}</span></div>
+    </div>
+    <div class="flex flex-wrap gap-3 text-xs">
+        <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/5">
+            <span class="text-gray-500">EPSS:</span><span class="font-semibold text-gray-300">{epss_val:.3f}%</span><span class="text-gray-600">(P{epss_pct:.0f})</span>
+        </div>
+        <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/5">
+            <span class="text-gray-500">Patch:</span><span class="font-semibold {patch_cls}">{patch_txt}</span>
+        </div>
+        <div class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/5">
+            <span class="text-gray-500">Exploitabilidade:</span><span class="font-semibold {exploit_cls}">{exploit}</span>
+        </div>
+    </div>
+    {compare_html}
+    {refs_html}
+</div>'''
+
 
 def generate_dashboard(cves_analyzed, date_str, hour_str):
-    """Cria um arquivo de dashboard HTML dinâmico, interativo e com design premium."""
-    num = get_next_dashboard_number()
-    filepath = f"dashboards/html{num}.html"
-    
-    total_count = len(cves_analyzed)
-    critical_count = sum(1 for item in cves_analyzed if item["cve"]["severity"] == "CRITICAL")
-    high_count = sum(1 for item in cves_analyzed if item["cve"]["severity"] == "HIGH")
-    patch_count = sum(1 for item in cves_analyzed if item["analysis_raw"].get("tem_patch") == "sim")
-    no_patch_count = total_count - patch_count
-    
-    cve_cards_list = []
+    """Cria o dashboard HTML5 diário com Tailwind CSS embutido + CSS3 custom."""
+    os.makedirs("dashboards", exist_ok=True)
+    filename = get_dashboard_filename(date_str)
+    filepath = f"dashboards/{filename}"
+
+    total   = len(cves_analyzed)
+    crit    = sum(1 for i in cves_analyzed if i["cve"]["severity"] == "CRITICAL")
+    imm     = sum(1 for i in cves_analyzed if i["cve"]["priority_rating"] == "IMEDIATA")
+    kev     = sum(1 for i in cves_analyzed if i["cve"]["in_cisa_kev"])
+    patched = sum(1 for i in cves_analyzed if i["analysis_raw"].get("tem_patch") == "sim")
+    ransomware = sum(1 for i in cves_analyzed if i["cve"].get("ransomware_known"))
+    iocs = sum(1 for i in cves_analyzed if i["cve"].get("ioc_count", 0) > 0)
+
+    # ── Constrói os cards HTML ────────────────────────────────────────────────
     if not cves_analyzed:
-        cards_html = '<div class="no-data"><h3>Nenhuma vulnerabilidade encontrada</h3><p>Tudo sob controle nas últimas 8 horas.</p></div>'
+        cards_html = (
+            '<div class="col-span-full flex flex-col items-center justify-center py-20 '
+            'glass-card rounded-2xl fade-in">'
+            '<div class="text-6xl mb-4">🟢</div>'
+            '<h3 class="text-2xl font-bold text-gray-100 mb-2">Tudo Limpo</h3>'
+            '<p class="text-gray-400">Nenhuma vulnerabilidade HIGH ou CRITICAL nas últimas 8 horas.</p></div>'
+        )
     else:
-        for item in cves_analyzed:
-            cve = item["cve"]
-            analysis = item["analysis_raw"]
-            severity_class = "critical" if cve["severity"] == "CRITICAL" else "high"
-            
-            ref_list_html = ""
-            if cve.get("references"):
-                ref_list_html = '<div class="references-box"><div class="references-title">Referências:</div><ul class="references-list">'
-                for ref in cve["references"]:
-                    ref_list_html += f'<li><a href="{ref}" target="_blank">{ref}</a></li>'
-                ref_list_html += '</ul></div>'
-                
-            compare_html = ""
-            if analysis.get("comparacao_ontem"):
-                compare_html = f'<div class="compare-box"><strong>Comparação com ontem:</strong> {analysis["comparacao_ontem"]}</div>'
-                
-            card_html = f"""
-            <div class="cve-card {severity_class}" data-severity="{cve['severity']}" data-sector="{analysis.get('setor', 'Other')}" data-patch="{analysis.get('tem_patch', 'não')}">
-                <div class="cve-header">
-                    <div class="cve-title-area">
-                        <a href="https://nvd.nist.gov/vuln/detail/{cve['id']}" target="_blank" class="cve-id">{cve['id']}</a>
-                        <span class="badge badge-{severity_class}">{cve['severity']}</span>
-                        <span class="badge badge-score">Score: {cve['score']}</span>
-                        <span class="badge badge-sector">{analysis.get('setor', 'Other')}</span>
-                    </div>
-                    <div class="cve-meta-badges">
-                        <div class="meta-property">
-                            <span class="meta-property-label">Patch:</span>
-                            <span class="meta-property-value patch-{analysis.get('tem_patch', 'não')}">{analysis.get('tem_patch', 'não').upper()}</span>
-                        </div>
-                        <div class="meta-property">
-                            <span class="meta-property-label">Exploitabilidade:</span>
-                            <span class="meta-property-value exploit-{analysis.get('exploitabilidade', 'Média')}">{analysis.get('exploitabilidade', 'Média')}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="cve-body">
-                    <div class="software-affected">
-                        <strong>Software Afetado:</strong>
-                        <span class="software-affected-name">{analysis.get('software', 'Não especificado')}</span>
-                    </div>
-                    <div class="summary-box">
-                        <div class="summary-line"><strong>O que é:</strong> {analysis.get('resumo_o_que_e', '')}</div>
-                        <div class="summary-line"><strong>Quem afeta:</strong> {analysis.get('resumo_quem_afeta', '')}</div>
-                        <div class="summary-line"><strong>O que fazer:</strong> {analysis.get('resumo_o_que_fazer', '')}</div>
-                    </div>
-                    {compare_html}
-                    {ref_list_html}
-                </div>
-            </div>
-            """
-            cve_cards_list.append(card_html)
-        cards_html = "\n".join(cve_cards_list)
-        
-    html_template = f"""<!DOCTYPE html>
+        cards_html = "\n".join(_build_cve_card(item) for item in cves_analyzed)
+
+    # ── Status do dia ─────────────────────────────────────────────────────────
+    if not cves_analyzed:
+        status = "🟢 Calmo"
+    elif imm > 0:
+        status = "🚨 Ação Imediata"
+    elif crit > 0:
+        status = "🔴 Crítico"
+    else:
+        status = "🟡 Atenção"
+
+    html = f"""<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel SecOps - Dashboard {date_str}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Sentinel SecOps — {date_str}</title>
+    <meta name="description" content="Sentinel SecOps Threat Intelligence Dashboard — Relatório de {date_str}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {{
+        theme: {{
+            extend: {{
+                colors: {{
+                    sentinel: {{
+                        bg: '#0a0f1e',
+                        surface: '#111827',
+                        border: '#1e293b',
+                        cyan: '#00f0ff',
+                        pink: '#ff2d55',
+                    }}
+                }},
+                fontFamily: {{
+                    sans: ['Inter', 'system-ui', 'sans-serif'],
+                }}
+            }}
+        }}
+    }}
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root {{
-            --bg-color: #080b11;
-            --card-bg: rgba(17, 24, 39, 0.7);
-            --card-border: rgba(255, 255, 255, 0.08);
-            --text-primary: #f3f4f6;
-            --text-secondary: #9ca3af;
-            --accent-critical: #ef4444;
-            --accent-high: #f97316;
-            --accent-patch: #10b981;
-            --accent-no-patch: #6b7280;
-            --accent-blue: #3b82f6;
-            --glow-critical: rgba(239, 68, 68, 0.15);
-            --glow-high: rgba(249, 115, 22, 0.15);
-        }}
-
-        * {{
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }}
+        *,*::before,*::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
         body {{
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #0a0f1e;
+            color: #f3f4f6;
             min-height: 100vh;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(239, 68, 68, 0.05) 0px, transparent 50%);
-            background-attachment: fixed;
-            padding: 2rem;
+            -webkit-font-smoothing: antialiased;
         }}
 
-        .container {{
-            max-width: 1200px;
-            margin: 0 auto;
+        body::before {{
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 15% 0%, rgba(0,240,255,.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 85% 100%, rgba(255,45,85,.05) 0%, transparent 50%),
+                linear-gradient(rgba(0,240,255,.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,240,255,.025) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
+            pointer-events: none;
+            z-index: 0;
         }}
 
-        header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--card-border);
+        .sentinel-wrap {{ position: relative; z-index: 1; }}
+
+        .glass-card {{
+            background: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(16px) saturate(1.2);
+            -webkit-backdrop-filter: blur(16px) saturate(1.2);
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }}
 
-        .logo {{
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+        @keyframes scanline {{
+            0%   {{ transform: translateY(-100%); opacity: 0; }}
+            10%  {{ opacity: 1; }}
+            90%  {{ opacity: 1; }}
+            100% {{ transform: translateY(100vh); opacity: 0; }}
+        }}
+        .scanline {{
+            position: fixed; top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent 0%, rgba(0,240,255,.5) 50%, transparent 100%);
+            animation: scanline 7s linear infinite;
+            pointer-events: none; z-index: 100;
         }}
 
-        .logo h1 {{
-            font-size: 1.75rem;
-            font-weight: 700;
-            background: linear-gradient(to right, #3b82f6, #ef4444);
+        @keyframes glowPulse {{
+            0%,100% {{ box-shadow: inset 0 0 20px rgba(239,68,68,.08), 0 0 12px rgba(239,68,68,.04); }}
+            50%     {{ box-shadow: inset 0 0 30px rgba(239,68,68,.14), 0 0 22px rgba(239,68,68,.08); }}
+        }}
+        .glow-critical {{ animation: glowPulse 3s ease-in-out infinite; }}
+
+        @keyframes fadeInUp {{
+            from {{ opacity: 0; transform: translateY(16px); }}
+            to   {{ opacity: 1; transform: translateY(0); }}
+        }}
+        .fade-in {{ animation: fadeInUp .45s ease-out forwards; opacity: 0; }}
+        .fade-in:nth-child(1)  {{ animation-delay: .04s; }}
+        .fade-in:nth-child(2)  {{ animation-delay: .08s; }}
+        .fade-in:nth-child(3)  {{ animation-delay: .12s; }}
+        .fade-in:nth-child(4)  {{ animation-delay: .16s; }}
+        .fade-in:nth-child(5)  {{ animation-delay: .20s; }}
+
+        .brand-gradient {{
+            background: linear-gradient(135deg, #00f0ff 0%, #3b82f6 50%, #8b5cf6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
         }}
 
-        .meta-info {{
-            text-align: right;
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-        }}
-
-        .meta-info span {{
-            color: var(--text-primary);
-            font-weight: 600;
-        }}
-
-        /* Stats Section */
-        .stats-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }}
-
-        .stat-card {{
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 1.25rem;
-            text-align: center;
-            backdrop-filter: blur(8px);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }}
-
-        .stat-card:hover {{
+        .stat-glow {{ transition: box-shadow .3s, transform .3s; }}
+        .stat-glow:hover {{
+            box-shadow: 0 0 28px rgba(0,240,255,.08);
             transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }}
 
-        .stat-val {{
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }}
+        ::-webkit-scrollbar       {{ width: 5px; }}
+        ::-webkit-scrollbar-track {{ background: #0a0f1e; }}
+        ::-webkit-scrollbar-thumb {{ background: #1e293b; border-radius: 4px; }}
+        ::-webkit-scrollbar-thumb:hover {{ background: #334155; }}
 
-        .stat-label {{
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }}
-
-        .stat-total {{ color: var(--accent-blue); }}
-        .stat-critical {{ color: var(--accent-critical); }}
-        .stat-high {{ color: var(--accent-high); }}
-        .stat-patch {{ color: var(--accent-patch); }}
-        .stat-no-patch {{ color: var(--accent-no-patch); }}
-
-        /* Filter Section */
-        .controls-card {{
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 1.25rem;
-            margin-bottom: 2rem;
-            backdrop-filter: blur(8px);
-        }}
-
-        .filters-title {{
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }}
-
-        .filters-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-        }}
-
-        .filter-group {{
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }}
-
-        .filter-group label {{
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }}
-
-        .filter-control {{
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--card-border);
-            border-radius: 6px;
-            padding: 0.6rem 0.75rem;
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: 0.875rem;
-            outline: none;
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }}
-
-        .filter-control:focus {{
-            border-color: var(--accent-blue);
-        }}
-
-        .search-control {{
-            width: 100%;
-        }}
-
-        /* CVE Cards */
-        .cve-grid {{
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }}
-
-        .cve-card {{
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 1.75rem;
-            backdrop-filter: blur(8px);
-            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-            position: relative;
-            overflow: hidden;
-        }}
-
-        .cve-card::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-        }}
-
-        .cve-card.critical::before {{ background-color: var(--accent-critical); }}
-        .cve-card.high::before {{ background-color: var(--accent-high); }}
-
-        .cve-card.critical {{
-            box-shadow: inset 0 0 15px var(--glow-critical);
-        }}
-        .cve-card.high {{
-            box-shadow: inset 0 0 15px var(--glow-high);
-        }}
-
-        .cve-card:hover {{
-            transform: translateY(-2px);
-            border-color: rgba(255, 255, 255, 0.15);
-        }}
-
-        .cve-header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 1.25rem;
-        }}
-
-        .cve-title-area {{
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-        }}
-
-        .cve-id {{
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            text-decoration: none;
-        }}
-
-        .cve-id:hover {{
-            text-decoration: underline;
-            color: var(--accent-blue);
-        }}
-
-        .badge {{
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            text-transform: uppercase;
-        }}
-
-        .badge-critical {{
-            background-color: rgba(239, 68, 68, 0.15);
-            color: var(--accent-critical);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }}
-
-        .badge-high {{
-            background-color: rgba(249, 115, 22, 0.15);
-            color: var(--accent-high);
-            border: 1px solid rgba(249, 115, 22, 0.3);
-        }}
-
-        .badge-score {{
-            background-color: rgba(255, 255, 255, 0.05);
-            color: var(--text-primary);
-            border: 1px solid var(--card-border);
-        }}
-
-        .badge-sector {{
-            background-color: rgba(59, 130, 246, 0.15);
-            color: var(--accent-blue);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }}
-
-        .cve-meta-badges {{
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }}
-
-        /* Badges for exploitability and patch */
-        .meta-property {{
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.875rem;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 0.4rem 0.75rem;
-            border-radius: 6px;
-            border: 1px solid var(--card-border);
-        }}
-
-        .meta-property-label {{
-            color: var(--text-secondary);
-        }}
-
-        .meta-property-value {{
-            font-weight: 600;
-        }}
-
-        .patch-sim {{ color: var(--accent-patch); }}
-        .patch-nao {{ color: var(--accent-critical); }}
-        
-        .exploit-Alta {{ color: var(--accent-critical); }}
-        .exploit-Media {{ color: var(--accent-high); }}
-        .exploit-Baixa {{ color: var(--accent-patch); }}
-
-        .cve-body {{
-            margin-bottom: 1.5rem;
-        }}
-
-        .software-affected {{
-            font-size: 0.95rem;
-            margin-bottom: 1rem;
-            padding: 0.75rem;
-            background: rgba(255, 255, 255, 0.02);
-            border-left: 3px solid var(--accent-blue);
-            border-radius: 0 6px 6px 0;
-        }}
-
-        .software-affected strong {{
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            display: block;
-            margin-bottom: 0.25rem;
-            text-transform: uppercase;
-        }}
-
-        /* 3-line Summary */
-        .summary-box {{
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            margin-bottom: 1.25rem;
-        }}
-
-        .summary-line {{
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }}
-
-        .summary-line strong {{
-            color: var(--text-secondary);
-            font-weight: 600;
-            margin-right: 0.25rem;
-        }}
-
-        .compare-box {{
-            background: rgba(249, 115, 22, 0.08);
-            border: 1px solid rgba(249, 115, 22, 0.2);
-            border-radius: 8px;
-            padding: 0.75rem;
-            margin-bottom: 1.25rem;
-            font-size: 0.9rem;
-        }}
-
-        .compare-box strong {{
-            color: var(--accent-high);
-        }}
-
-        .references-box {{
-            border-top: 1px solid var(--card-border);
-            padding-top: 1rem;
-        }}
-
-        .references-title {{
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            margin-bottom: 0.5rem;
-        }}
-
-        .references-list {{
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-        }}
-
-        .references-list a {{
-            color: var(--accent-blue);
-            text-decoration: none;
-            font-size: 0.875rem;
-            word-break: break-all;
-        }}
-
-        .references-list a:hover {{
-            text-decoration: underline;
-        }}
-
-        .no-data {{
-            text-align: center;
-            padding: 4rem;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            color: var(--text-secondary);
-        }}
-
-        .no-data h3 {{
-            font-size: 1.5rem;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-        }}
-
-        @media (max-width: 768px) {{
-            body {{ padding: 1rem; }}
-            header {{ flex-direction: column; align-items: flex-start; gap: 1rem; }}
-            .meta-info {{ text-align: left; }}
-            .cve-header {{ flex-direction: column; align-items: flex-start; }}
-            .cve-meta-badges {{ flex-wrap: wrap; width: 100%; }}
+        select.sentinel-sel {{
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%234b5563'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right .75rem center;
+            padding-right: 2.25rem;
         }}
     </style>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <div class="logo">
-                <span>🛡️</span>
-                <h1>Sentinel SecOps</h1>
+<body class="text-gray-100 min-h-screen">
+    <div class="scanline"></div>
+
+    <div class="sentinel-wrap max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 fade-in">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-lg shadow-lg shadow-cyan-500/20">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-extrabold brand-gradient tracking-tight">Sentinel SecOps</h1>
+                    <p class="text-[0.65rem] text-gray-500 tracking-[0.2em] uppercase">Threat Intelligence Dashboard</p>
+                </div>
             </div>
-            <div class="meta-info">
-                Relatório Diário de Ameaças<br>
-                Atualizado em: <span>{date_str} às {hour_str}</span> (Brasília)
+            <div class="flex items-center gap-4">
+                <a href="../index.html" class="text-xs text-sentinel-cyan/60 hover:text-sentinel-cyan border border-sentinel-cyan/20 hover:border-sentinel-cyan/40 px-3 py-1.5 rounded-lg transition-all duration-200">
+                    ← Hub Principal
+                </a>
+                <div class="text-right">
+                    <p class="text-sm text-gray-400">Relatório de <span class="text-gray-200 font-semibold">{date_str}</span></p>
+                    <p class="text-xs text-gray-500">Atualizado às {hour_str} (Brasília)</p>
+                </div>
             </div>
         </header>
 
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-val stat-total" id="stat-total">{total_count}</div>
-                <div class="stat-label">Total CVEs</div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+            <div class="glass-card rounded-xl p-4 text-center stat-glow fade-in">
+                <div class="text-3xl font-extrabold text-cyan-400 mb-1" id="s-total">{total}</div>
+                <div class="text-[0.6rem] text-gray-500 uppercase tracking-[0.15em] font-medium">Total CVEs</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-val stat-critical" id="stat-critical">{critical_count}</div>
-                <div class="stat-label">Critical</div>
+            <div class="glass-card rounded-xl p-4 text-center stat-glow fade-in">
+                <div class="text-3xl font-extrabold text-fuchsia-400 mb-1" id="s-imm">{imm}</div>
+                <div class="text-[0.6rem] text-gray-500 uppercase tracking-[0.15em] font-medium">Ação Imediata</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-val stat-high" id="stat-high">{high_count}</div>
-                <div class="stat-label">High</div>
+            <div class="glass-card rounded-xl p-4 text-center stat-glow fade-in">
+                <div class="text-3xl font-extrabold text-red-400 mb-1" id="s-kev">{kev}</div>
+                <div class="text-[0.6rem] text-gray-500 uppercase tracking-[0.15em] font-medium">CISA KEV</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-val stat-patch" id="stat-patch">{patch_count}</div>
-                <div class="stat-label">Com Patch</div>
+            <div class="glass-card rounded-xl p-4 text-center stat-glow fade-in">
+                <div class="text-3xl font-extrabold text-pink-400 mb-1" id="s-ran">{ransomware}</div>
+                <div class="text-[0.6rem] text-gray-500 uppercase tracking-[0.15em] font-medium">Ransomware</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-val stat-no-patch" id="stat-no-patch">{no_patch_count}</div>
-                <div class="stat-label">Sem Patch</div>
+            <div class="glass-card rounded-xl p-4 text-center stat-glow fade-in">
+                <div class="text-3xl font-extrabold text-orange-400 mb-1" id="s-ioc">{iocs}</div>
+                <div class="text-[0.6rem] text-gray-500 uppercase tracking-[0.15em] font-medium">IOCs Ativos</div>
             </div>
         </div>
 
-        <!-- Controls -->
-        <div class="controls-card">
-            <div class="filters-title">
-                <span>🔍</span> Filtros Interativos
+        <div class="glass-card rounded-xl p-5 mb-8 fade-in">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-sentinel-cyan text-sm">⚡</span>
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-[0.15em]">Filtros Interativos</span>
             </div>
-            <div class="filters-grid">
-                <div class="filter-group">
-                    <label for="search-input">Pesquisa</label>
-                    <input type="text" id="search-input" class="filter-control search-control" placeholder="Buscar por CVE, software ou descrição..." oninput="filterCVEs()">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div>
+                    <label class="block text-[0.6rem] text-gray-500 uppercase tracking-[0.15em] mb-1.5 font-medium" for="q">Pesquisa</label>
+                    <input type="text" id="q" placeholder="CVE, software..."
+                           class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:border-sentinel-cyan/50 outline-none transition-all duration-200"
+                           oninput="applyFilters()">
                 </div>
-                <div class="filter-group">
-                    <label for="severity-filter">Severidade</label>
-                    <select id="severity-filter" class="filter-control" onchange="filterCVEs()">
-                        <option value="all">Todas</option>
-                        <option value="CRITICAL">CRITICAL</option>
-                        <option value="HIGH">HIGH</option>
+                <div>
+                    <label class="block text-[0.6rem] text-gray-500 uppercase tracking-[0.15em] mb-1.5 font-medium" for="f-sev">Severidade</label>
+                    <select id="f-sev" class="sentinel-sel w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:border-sentinel-cyan/50 outline-none transition-all duration-200" onchange="applyFilters()">
+                        <option value="all">Todas</option><option value="CRITICAL">Critical</option><option value="HIGH">High</option>
                     </select>
                 </div>
-                <div class="filter-group">
-                    <label for="sector-filter">Setor</label>
-                    <select id="sector-filter" class="filter-control" onchange="filterCVEs()">
-                        <option value="all">Todos</option>
-                        <option value="Windows">Windows</option>
-                        <option value="Linux">Linux</option>
-                        <option value="Web">Web</option>
-                        <option value="Database">Database</option>
-                        <option value="Network">Network</option>
-                        <option value="Mobile">Mobile</option>
-                        <option value="Cloud">Cloud</option>
-                        <option value="Other">Other</option>
+                <div>
+                    <label class="block text-[0.6rem] text-gray-500 uppercase tracking-[0.15em] mb-1.5 font-medium" for="f-sec">Setor</label>
+                    <select id="f-sec" class="sentinel-sel w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:border-sentinel-cyan/50 outline-none transition-all duration-200" onchange="applyFilters()">
+                        <option value="all">Todos</option><option value="Windows">Windows</option><option value="Linux">Linux</option>
+                        <option value="Web">Web</option><option value="Database">Database</option><option value="Network">Network</option>
+                        <option value="Mobile">Mobile</option><option value="Cloud">Cloud</option><option value="Other">Other</option>
                     </select>
                 </div>
-                <div class="filter-group">
-                    <label for="patch-filter">Correção (Patch)</label>
-                    <select id="patch-filter" class="filter-control" onchange="filterCVEs()">
-                        <option value="all">Todos</option>
-                        <option value="sim">Com Correção (Sim)</option>
-                        <option value="não">Sem Correção (Não)</option>
+                <div>
+                    <label class="block text-[0.6rem] text-gray-500 uppercase tracking-[0.15em] mb-1.5 font-medium" for="f-pat">Patch</label>
+                    <select id="f-pat" class="sentinel-sel w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:border-sentinel-cyan/50 outline-none transition-all duration-200" onchange="applyFilters()">
+                        <option value="all">Todos</option><option value="sim">Com Patch ✓</option><option value="não">Sem Patch ✗</option>
                     </select>
                 </div>
-                <div class="filter-group">
-                    <label for="history-filter">Histórico</label>
-                    <select id="history-filter" class="filter-control" onchange="if(this.value && this.value !== '#') window.location.href=this.value;">
-                        {history_options}
+                <div>
+                    <label class="block text-[0.6rem] text-gray-500 uppercase tracking-[0.15em] mb-1.5 font-medium" for="f-vec">Vetor de Ataque</label>
+                    <select id="f-vec" class="sentinel-sel w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-200 focus:border-sentinel-cyan/50 outline-none transition-all duration-200" onchange="applyFilters()">
+                        <option value="all">Todos</option><option value="NETWORK">Network</option><option value="LOCAL">Local</option><option value="ADJACENT_NETWORK">Adjacent</option>
                     </select>
                 </div>
             </div>
         </div>
 
-        <!-- CVE List -->
-        <div class="cve-grid" id="cve-container">
+        <div class="space-y-4" id="cve-list">
             {cards_html}
         </div>
+
+        <footer class="mt-12 pt-6 border-t border-white/[0.04] text-center">
+            <p class="text-[0.7rem] text-gray-600">
+                Sentinel SecOps · Automated Threat Intelligence ·
+                <a href="https://github.com/Pedroxious/Sentinel-SecOps" target="_blank"
+                   class="text-sentinel-cyan/40 hover:text-sentinel-cyan transition-colors">GitHub</a> ·
+                <a href="https://github.com/Pedroxious" target="_blank"
+                   class="text-sentinel-cyan/40 hover:text-sentinel-cyan transition-colors">@Pedroxious</a>
+            </p>
+        </footer>
+
     </div>
 
     <script>
-        function filterCVEs() {{
-            const searchQuery = document.getElementById('search-input').value.toLowerCase();
-            const severityFilter = document.getElementById('severity-filter').value;
-            const sectorFilter = document.getElementById('sector-filter').value;
-            const patchFilter = document.getElementById('patch-filter').value;
-            
-            const cards = document.querySelectorAll('.cve-card');
-            let visibleCount = 0;
-            let criticalCount = 0;
-            let highCount = 0;
-            let patchCount = 0;
-            let noPatchCount = 0;
+    function applyFilters() {{
+        const q   = document.getElementById('q').value.toLowerCase();
+        const sev = document.getElementById('f-sev').value;
+        const sec = document.getElementById('f-sec').value;
+        const pat = document.getElementById('f-pat').value;
+        const vec = document.getElementById('f-vec').value;
+        
+        let t = 0;
 
-            cards.forEach(card => {{
-                const id = card.querySelector('.cve-id').textContent.toLowerCase();
-                const softwareEl = card.querySelector('.software-affected-name');
-                const software = softwareEl ? softwareEl.textContent.toLowerCase() : '';
-                const bodyText = card.querySelector('.cve-body').textContent.toLowerCase();
-                
-                const sev = card.getAttribute('data-severity');
-                const sector = card.getAttribute('data-sector');
-                const patch = card.getAttribute('data-patch');
-                
-                const matchesSearch = id.includes(searchQuery) || software.includes(searchQuery) || bodyText.includes(searchQuery);
-                const matchesSeverity = (severityFilter === 'all' || sev === severityFilter);
-                const matchesSector = (sectorFilter === 'all' || sector === sectorFilter);
-                const matchesPatch = (patchFilter === 'all' || patch === patchFilter);
-                
-                if (matchesSearch && matchesSeverity && matchesSector && matchesPatch) {{
-                    card.style.display = 'block';
-                    visibleCount++;
-                    if (sev === 'CRITICAL') criticalCount++;
-                    if (sev === 'HIGH') highCount++;
-                    if (patch === 'sim') patchCount++;
-                    if (patch === 'não') noPatchCount++;
-                }} else {{
-                    card.style.display = 'none';
-                }}
-            }});
+        document.querySelectorAll('.cve-card').forEach(c => {{
+            const text = c.textContent.toLowerCase();
+            const show =
+                (q === '' || text.includes(q)) &&
+                (sev === 'all' || c.dataset.severity === sev) &&
+                (sec === 'all' || c.dataset.sector === sec) &&
+                (pat === 'all' || c.dataset.patch === pat) &&
+                (vec === 'all' || c.dataset.vector === vec);
 
-            // Update stats cards based on filter
-            document.getElementById('stat-total').textContent = visibleCount;
-            document.getElementById('stat-critical').textContent = criticalCount;
-            document.getElementById('stat-high').textContent = highCount;
-            document.getElementById('stat-patch').textContent = patchCount;
-            document.getElementById('stat-no-patch').textContent = noPatchCount;
+            c.style.display = show ? '' : 'none';
+            if (show) t++;
+        }});
 
-            // Handle no results
-            let noDataEl = document.getElementById('no-results-msg');
-            if (visibleCount === 0) {{
-                if (!noDataEl) {{
-                    noDataEl = document.createElement('div');
-                    noDataEl.id = 'no-results-msg';
-                    noDataEl.className = 'no-data';
-                    noDataEl.innerHTML = '<h3>Nenhum CVE encontrado</h3><p>Tente ajustar os filtros ou a busca.</p>';
-                    document.getElementById('cve-container').appendChild(noDataEl);
-                }}
-            }} else if (noDataEl) {{
-                noDataEl.remove();
-            }}
-        }}
+        document.getElementById('s-total').textContent = t;
+    }}
     </script>
 </body>
 </html>"""
 
-    # Scan dashboards directory for all files
-    os.makedirs("dashboards", exist_ok=True)
-    files = os.listdir("dashboards")
-    dashboard_files = []
-    for f in files:
-        if f.startswith("html") and f.endswith(".html"):
-            try:
-                n = int(f[4:-5])
-                dashboard_files.append((n, f))
-            except ValueError:
-                pass
-                
-    # We will ALSO include the current one being generated right now, since it hasn't been written to disk yet
-    # but we want it to show up in the history list!
-    current_filename = f"html{num}.html"
-    if (num, current_filename) not in dashboard_files:
-        dashboard_files.append((num, current_filename))
-        
-    dashboard_files.sort(key=lambda x: x[0], reverse=True)
-    
-    # 1. Build options for dashboards/html{num}.html
-    dash_options = []
-    # Link to the main page (Dashboard Atual) at the top of the history list
-    dash_options.append('<option value="../index.html">🖥️ Dashboard Atual (Mais Recente)</option>')
-    for n, f in dashboard_files:
-        date_info = get_dashboard_info(f) if f != current_filename else f"{date_str} {hour_str}"
-        selected_str = "selected" if n == num else ""
-        dash_options.append(f'<option value="{f}" {selected_str}>📅 Dashboard {date_info} (#{n})</option>')
-    dash_options_str = "\n".join(dash_options)
-    
-    # 2. Build options for index.html at root
-    idx_options = []
-    idx_options.append('<option value="#" selected>🖥️ Dashboard Atual (Mais Recente)</option>')
-    for n, f in dashboard_files:
-        date_info = get_dashboard_info(f) if f != current_filename else f"{date_str} {hour_str}"
-        idx_options.append(f'<option value="dashboards/{f}">📅 Dashboard {date_info} (#{n})</option>')
-    idx_options_str = "\n".join(idx_options)
-
-    # Generate HTML content for dashboards/html{num}.html (with relative links)
-    html_dashboard = html_template.format(
-        date_str=date_str,
-        hour_str=hour_str,
-        total_count=total_count,
-        critical_count=critical_count,
-        high_count=high_count,
-        patch_count=patch_count,
-        no_patch_count=no_patch_count,
-        cards_html=cards_html,
-        history_options=dash_options_str
-    )
-    
-    # Save dashboards/html{num}.html
     with open(filepath, "w", encoding="utf-8") as f:
-        f.write(html_dashboard)
-        
-    # Generate HTML content for index.html at root
-    html_index = html_template.format(
-        date_str=date_str,
-        hour_str=hour_str,
-        total_count=total_count,
-        critical_count=critical_count,
-        high_count=high_count,
-        patch_count=patch_count,
-        no_patch_count=no_patch_count,
-        cards_html=cards_html,
-        history_options=idx_options_str
-    )
-    
-    # Save index.html
-    with open("index.html", "w", encoding="utf-8") as f:
-        f.write(html_index)
-        
-    return num
+        f.write(html)
 
+    generate_manifest(date_str, total, status)
+    print(f"   📄 Dashboard salvo: {filepath}")
+    return filename
 
-# ─── 8. Atualiza README ───────────────────────────────────────────────────────
-def update_readme(date_str, hour_str, count, dashboard_num, status_badge):
-    """Atualiza o arquivo README.md com o badge de status e link do dashboard."""
-    if not os.path.exists("README.md"):
-        return
-
+# ─── 8. Relatório Markdown Diário ─────────────────────────────────────────
+def get_yesterday_report_content():
+    """Tenta recuperar o relatório gerado no ciclo anterior."""
     try:
         with open("README.md", "r", encoding="utf-8") as f:
             content = f.read()
-    except Exception as e:
-        print(f"⚠️ Erro ao ler README.md: {e}")
-        return
+        if "## Relatório do Turno" in content:
+            start_idx = content.find("## Relatório do Turno")
+            return content[start_idx:]
+    except:
+        pass
+    return ""
 
-    new_badge = (
-        f"> 🕐 **Última atualização:** {date_str} às {hour_str} (Brasília) "
-        f"| 📊 **Status:** {status_badge} ({count} novos) "
-        f"| 🖥️ **[Dashboard Atual](./index.html)**"
+def generate_report(cves_analyzed, date_str, hour_str, yesterday_content=""):
+    """Gera a porção do relatório para colocar no README."""
+    report = [f"## Relatório do Turno ({hour_str} - Brasília)\n\n"]
+    
+    if not cves_analyzed:
+        report.append("✅ **Tudo limpo!** Nenhuma vulnerabilidade CRITICAL ou HIGH detectada no último ciclo.\n")
+    else:
+        for item in cves_analyzed:
+            cve = item["cve"]
+            analysis = item["analysis_raw"]
+            is_crit = cve["severity"] == "CRITICAL"
+            sev_icon = "🔴" if is_crit else "🟠"
+            kev_text = "🚨 **CISA KEV:** SIM (Risco Imediato!)" if cve["in_cisa_kev"] else "CISA KEV: Não"
+            
+            report.append(f"### {sev_icon} [{cve['id']}](https://nvd.nist.gov/vuln/detail/{cve['id']}) - {analysis.get('software', 'N/A')}\n")
+            report.append(f"- **Prioridade:** {cve['priority_rating']} (Score: {cve['priority_score']:.1f}/10.0)\n")
+            report.append(f"- **CVSS:** {cve['score']} ({cve['severity']})\n")
+            report.append(f"- **EPSS:** {cve['epss_data'].get('epss', 0.0)*100:.2f}%\n")
+            report.append(f"- **CWE:** `{cve.get('cwe_id', 'N/A')}`\n")
+            report.append(f"- **Vetor de Ataque:** `{cve.get('attack_vector', 'N/A')}` | Complexidade: `{cve.get('attack_complexity', 'N/A')}`\n")
+            
+            if cve.get('ransomware_known'):
+                report.append(f"- **🦠 Ransomware:** Associação CONHECIDA\n")
+                
+            ioc_data = cve.get('ioc_data', {})
+            if ioc_data and ioc_data.get('count', 0) > 0:
+                report.append(f"- **IOCs (ThreatFox):** {ioc_data['count']} indicador(es) encontrado(s)\n")
+                
+            ghsa = cve.get('ghsa_data')
+            if ghsa:
+                report.append(f"- **GitHub Advisory:** [{ghsa['ghsa_id']}]({ghsa.get('url', '')})\n")
+                
+            report.append(f"- **{kev_text}**\n")
+            report.append(f"- **Patch:** {'✅ Sim' if analysis.get('tem_patch') == 'sim' else '❌ Não ou Desconhecido'}\n")
+            report.append(f"- **Resumo:** {analysis.get('resumo_o_que_e', '')}\n")
+            report.append(f"- **Recomendação:** {analysis.get('resumo_o_que_fazer', '')}\n\n")
+
+    return "".join(report)
+
+# ─── 9. Atualização do CSV de Histórico ──────────────────────────────────
+def update_csv(cves_analyzed, date_str, hour_str):
+    csv_file = "historico.csv"
+    file_exists = os.path.exists(csv_file)
+    
+    with open(csv_file, mode="a", encoding="utf-8", newline="") as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow([
+                "data", "hora", "cve_id", "score", "severidade",
+                "priority_score", "priority_rating", "in_cisa_kev", "epss",
+                "cwe_id", "attack_vector", "attack_complexity",
+                "ransomware_known", "ioc_count",
+                "setor", "software", "tem_patch", "exploitabilidade", "resumo"
+            ])
+            
+        for item in cves_analyzed:
+            cve = item["cve"]
+            an = item["analysis_raw"]
+            writer.writerow([
+                date_str,
+                hour_str,
+                cve["id"],
+                cve["score"],
+                cve["severity"],
+                f"{cve['priority_score']:.1f}",
+                cve["priority_rating"],
+                cve["in_cisa_kev"],
+                cve["epss_data"].get("epss", 0.0),
+                cve.get("cwe_id", "N/A"),
+                cve.get("attack_vector", "UNKNOWN"),
+                cve.get("attack_complexity", "UNKNOWN"),
+                "sim" if cve.get("ransomware_known") else "não",
+                cve.get("ioc_count", 0),
+                an.get("setor", "Other"),
+                an.get("software", "N/A"),
+                an.get("tem_patch", "não"),
+                an.get("exploitabilidade", "Média"),
+                an.get("resumo_o_que_e", "")
+            ])
+
+# ─── 10. Atualiza README ──────────────────────────────────────────────────
+def update_readme(date_str, hour_str, count_cves, dashboard_file, status_badge):
+    """Atualiza o arquivo README.md principal com o novo relatório."""
+    print("📝 Atualizando README.md...")
+    
+    with open("README.md", "r", encoding="utf-8") as f:
+        content = f.read()
+
+    new_status = (
+        f"**Última Atualização:** {date_str} {hour_str} (Brasília)\n\n"
+        f"**Status da Rede:** {status_badge}\n\n"
+        f"**CVEs Críticos Hoje:** {count_cves}\n\n"
+        f"**📊 [Ver Dashboard Detalhado](dashboards/{dashboard_file})**\n\n"
     )
 
-    lines = content.split("\n")
-    replaced = False
-    for i, line in enumerate(lines):
-        if "Última atualização:" in line:
-            lines[i] = new_badge
-            replaced = True
-            break
-            
-    if not replaced:
-        lines.insert(2, new_badge)
-
     try:
-        with open("README.md", "w", encoding="utf-8") as f:
-            f.write("\n".join(lines))
+        start_idx = content.find("<!-- STATUS_START -->") + len("<!-- STATUS_START -->\n")
+        end_idx = content.find("<!-- STATUS_END -->")
+        if start_idx != -1 and end_idx != -1:
+            content = content[:start_idx] + new_status + content[end_idx:]
     except Exception as e:
-        print(f"⚠️ Erro ao escrever README.md: {e}")
+        print(f"⚠️ Erro ao atualizar status no README: {e}")
+
+    with open("README.md", "w", encoding="utf-8") as f:
+        f.write(content)
 
 
-# ─── Main ─────────────────────────────────────────────────────────────────────
+# ─── 11. MAIN FLOW ────────────────────────────────────────────────────────
 def main():
-    # 0. Migração do CSV para 10 colunas se necessário
+    print("🚀 Iniciando o Sentinel SecOps - Threat Intel Automation\n")
+    
     migrate_csv()
-
-    if not GEMINI_API_KEY:
-        print("❌ Erro: A variável de ambiente GEMINI_API_KEY não está definida.")
+    
+    now_br = datetime.now(timezone.utc) - timedelta(hours=3)
+    date_str = now_br.strftime("%Y-%m-%d")
+    hour_str = now_br.strftime("%H:%M")
+    
+    # 1. Busca CVEs no NVD
+    raw_vulnerabilities = get_cves()
+    print(f"   Encontradas {len(raw_vulnerabilities)} vulnerabilidades nas últimas horas.")
+    
+    if not raw_vulnerabilities:
+        print("   Tudo calmo! Finalizando.")
+        # Gera dashboard limpo
+        dashboard_file = generate_dashboard([], date_str, hour_str)
+        update_readme(date_str, hour_str, 0, dashboard_file, "🟢 Seguro - Nenhum novo alerta crítico")
         return
 
-    now          = datetime.now(timezone.utc)
-    brasilia     = now - timedelta(hours=3)
-    date_str     = brasilia.strftime("%Y-%m-%d")
-    hour_str     = brasilia.strftime("%H:%M")
-
-    print(f"\n🛡️  Sentinel SecOps iniciado — {date_str} às {hour_str} (Brasília)\n")
-
-    # 1. Busca
-    print("🔍 Buscando CVEs nas últimas 8h...")
-    try:
-        raw_cves = get_cves()
-        print(f"   📥 {len(raw_cves)} CVEs encontrados\n")
-    except Exception as e:
-        print(f"   ❌ Erro na busca de CVEs: {e}")
+    # 2. Filtra HIGH/CRITICAL e enriquece intel básica
+    critical_cves = filter_critical(raw_vulnerabilities)
+    print(f"   Filtradas {len(critical_cves)} vulnerabilidades com Score >= 7.0 (HIGH/CRITICAL).")
+    
+    if not critical_cves:
+        dashboard_file = generate_dashboard([], date_str, hour_str)
+        update_readme(date_str, hour_str, 0, dashboard_file, "🟢 Seguro - Apenas alertas de baixa severidade")
         return
 
-    # 2. Filtra
-    critical_cves = filter_critical(raw_cves)
-    print(f"⚠️  {len(critical_cves)} são HIGH ou CRITICAL")
+    # 3. Enriquece com CISA KEV, EPSS, ThreatFox, GitHub
+    cve_ids = [c["id"] for c in critical_cves]
+    kev_data = get_cisa_kev_cves()
+    epss_scores = get_epss_scores(cve_ids)
+    
+    print("🔍 Buscando IOCs no ThreatFox (abuse.ch)...")
+    threatfox_data = get_threatfox_iocs(cve_ids)
+    
+    print("🔍 Buscando advisories no GitHub Security...")
+    ghsa_data = get_github_advisories(cve_ids)
 
-    # 3. Filtra CVEs já presentes no histórico local para economizar créditos do Gemini
-    existing_cves = set()
-    if os.path.exists("historico.csv"):
-        try:
-            with open("historico.csv", "r", encoding="utf-8") as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    cid = row.get("cve_id")
-                    if cid:
-                        existing_cves.add(cid.strip())
-        except Exception as e:
-            print(f"   ⚠️ Erro ao ler histórico para filtrar duplicados: {e}")
-
-    new_cves = [c for c in critical_cves if c["id"] not in existing_cves]
-    print(f"🆕 {len(new_cves)} são novos CVEs para análise\n")
-
-    cves_analyzed = []
-    if new_cves:
-        # Lê o relatório de ontem para comparação (se existir)
-        yesterday_content = get_yesterday_report_content(brasilia)
+    for cve in critical_cves:
+        cve_id = cve["id"]
+        cve["in_cisa_kev"] = cve_id in kev_data
+        cve["ransomware_known"] = kev_data.get(cve_id, {}).get("ransomware_known", "Unknown") == "Known"
+        cve["kev_action"] = kev_data.get(cve_id, {}).get("required_action", "N/A")
+        cve["kev_due_date"] = kev_data.get(cve_id, {}).get("due_date", "N/A")
+        cve["epss_data"] = epss_scores.get(cve_id, {"epss": 0.0, "percentile": 0.0})
+        cve["ioc_data"] = threatfox_data.get(cve_id, {"count": 0, "ioc_types": [], "malware_families": []})
+        cve["ioc_count"] = cve["ioc_data"]["count"]
+        cve["ghsa_data"] = ghsa_data.get(cve_id)
         
-        print(f"🤖 Analisando {len(new_cves)} CVEs em batch com Gemini...")
-        try:
-            gemini_results = analyze_batch_with_gemini(new_cves, yesterday_content)
-            results_by_id = {res["cve_id"]: res for res in gemini_results if "cve_id" in res}
-            
-            for cve in new_cves:
-                analysis = results_by_id.get(cve["id"])
-                if analysis:
-                    if analysis.get("relevante", True):
-                        cves_analyzed.append({
-                            "cve": cve,
-                            "analysis_raw": analysis
-                        })
-                    else:
-                        print(f"   🧹 CVE {cve['id']} ignorado como ruído/irrelevante.")
+        priority_score, priority_rating = calculate_priority_score(
+            cve_id, cve["score"], cve["in_cisa_kev"], cve["epss_data"],
+            ransomware_known=cve["ransomware_known"],
+            ioc_count=cve["ioc_count"],
+            attack_vector=cve.get("attack_vector", "UNKNOWN"),
+            attack_complexity=cve.get("attack_complexity", "UNKNOWN")
+        )
+        cve["priority_score"] = priority_score
+        cve["priority_rating"] = priority_rating
+
+    # 4. Envia pro Gemini analisar em lotes de 10
+    cves_analyzed = []
+    batch_size = 10
+    for i in range(0, len(critical_cves), batch_size):
+        end_idx = min(i + batch_size, len(critical_cves))
+        gemini_results = analyze_batch_with_gemini(critical_cves, i, end_idx)
+        
+        if gemini_results:
+            # Associa a analise do Gemini com os dados brutos
+            # O gemini pode retornar fora de ordem, entao criamos um dict lookup
+            lookup = {r["id"]: r for r in gemini_results if "id" in r}
+            for cve in critical_cves[i:end_idx]:
+                if cve["id"] in lookup:
+                    cves_analyzed.append({
+                        "cve": cve,
+                        "analysis_raw": lookup[cve["id"]]
+                    })
                 else:
-                    print(f"   ⚠️ CVE {cve['id']} ausente na resposta principal da IA. Usando fallback individual...")
-                    # Fallback individual em caso de perda de algum ID no JSON do lote
-                    try:
-                        single_results = analyze_batch_with_gemini([cve], yesterday_content)
-                        if single_results and single_results[0].get("relevante", True):
-                            cves_analyzed.append({
-                                "cve": cve,
-                                "analysis_raw": single_results[0]
-                            })
-                    except Exception as ex:
-                        print(f"   ❌ Erro no fallback individual de {cve['id']}: {ex}")
-        except Exception as e:
-            print(f"   ❌ Erro crítico na análise em lote: {e}")
-    else:
-        print("   Nenhum novo CVE para analisar.")
+                    print(f"⚠️ Gemini não retornou análise para {cve['id']}")
+        
+        # Pausa para não estourar rate limit da API gratuita do Gemini
+        time.sleep(3)
 
-    # 4. Tendência Semanal (toda segunda-feira)
-    trend_paragraph = ""
-    if brasilia.weekday() == 0:
-        print("📊 Hoje é segunda-feira! Gerando análise de tendência semanal...")
-        trend_paragraph = weekly_trend(date_str)
-        if trend_paragraph:
-            print("   ✅ Tendência semanal gerada com sucesso.")
+    print(f"\n✅ Análise concluída para {len(cves_analyzed)} CVEs.\n")
 
-    # 5. Gera relatório
-    generate_report(cves_analyzed, date_str, hour_str, trend_paragraph)
-    print(f"\n📝 Relatório salvo em reports/{date_str}.md")
+    # 5. Salva dados, gera relatorio e atualiza dashboard
+    update_csv(cves_analyzed, date_str, hour_str)
+    
+    # 6. Gera Dashboard do Dia (cria ou atualiza arquivo do dia)
+    dashboard_file = generate_dashboard(cves_analyzed, date_str, hour_str)
+    
+    status_badge = "🟡 Atenção"
+    if any(item["cve"]["priority_rating"] == "IMEDIATA" for item in cves_analyzed):
+        status_badge = "🚨 CRÍTICO - Ação Imediata Requerida"
+    elif any(item["cve"]["severity"] == "CRITICAL" for item in cves_analyzed):
+        status_badge = "🔴 Alerta Vermelho"
 
-    # 6. Atualiza CSV
-    if cves_analyzed:
-        update_csv(cves_analyzed, date_str, hour_str)
-        print("📊 historico.csv updated")
-
-    # 7. Gera Dashboard HTML
-    dashboard_num = generate_dashboard(cves_analyzed, date_str, hour_str)
-    print(f"🖥️  Dashboard html{dashboard_num}.html gerado com sucesso!")
-
-    # 8. Atualiza README
-    if not cves_analyzed:
-        status_badge = "🟢 Calmo"
-    elif any(item["cve"]["score"] >= 9.0 for item in cves_analyzed):
-        status_badge = "🔴 Crítico"
-    elif len(cves_analyzed) > 3:
-        status_badge = "🔴 Crítico"
-    else:
-        status_badge = "🟡 Moderado"
-
-    update_readme(date_str, hour_str, len(cves_analyzed), dashboard_num, status_badge)
-    print("📄 README.md atualizado")
-
-    print("\n✅ Sentinel SecOps finalizado com sucesso!\n")
-
+    update_readme(date_str, hour_str, len(cves_analyzed), dashboard_file, status_badge)
+    
+    print("\n✨ Sentinel SecOps finalizado com sucesso!")
 
 if __name__ == "__main__":
     main()

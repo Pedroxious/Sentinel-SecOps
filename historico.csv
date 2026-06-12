@@ -1,1 +1,1 @@
-data,hora,cve_id,score,severidade,setor,software,tem_patch,exploitabilidade,resumo
+data,hora,cve_id,score,severidade,priority_score,priority_rating,in_cisa_kev,epss,cwe_id,attack_vector,attack_complexity,ransomware_known,ioc_count,setor,software,tem_patch,exploitabilidade,resumo
