@@ -1,0 +1,31 @@
+name: Sync MITRE ATT&CK Framework
+
+on:
+  schedule:
+    - cron: '0 3 1 * *' # Dia 1 de cada mês às 03:00 UTC (00:00 Brasília)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Create Data Directory
+        run: mkdir -p data
+
+      - name: Download MITRE ATT&CK JSON
+        run: |
+          curl -L "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json" -o data/mitre_attack.json
+
+      - name: Commit and Push MITRE JSON
+        run: |
+          git config --global user.name  "Sentinel SecOps Bot"
+          git config --global user.email "sentinel-bot@users.noreply.github.com"
+          git add data/mitre_attack.json
+          git diff --staged --quiet || git commit -m "Auto-sync: MITRE ATT&CK Framework $(date '+%Y-%m')"
+          git push

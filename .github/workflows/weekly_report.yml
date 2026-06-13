@@ -1,0 +1,57 @@
+name: Sentinel SecOps - Weekly Executive Report
+
+on:
+  schedule:
+    - cron: '0 11 * * 1' # Toda segunda-feira às 11:00 UTC (08:00 Brasília)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  weekly:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: pip install pandas requests google-generativeai fpdf2
+
+      - name: Generate Weekly Report
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          # Run image generator to update assets/dashboard_header.png (weekly update)
+          python -c "
+          import os, google.generativeai as genai
+          genai.configure(api_key=os.environ['GEMINI_API_KEY'])
+          model = genai.GenerativeModel('gemini-2.5-flash')
+          prompt = \"\"\"Create a professional cybersecurity threat intelligence dashboard header image. Dark background with deep blue and cyan colors. Show abstract network nodes, connection lines, and a subtle shield icon. Include minimal text: 'SENTINEL SECOPS' in a clean monospace font. Style: corporate tech, no humans, no logos, clean geometric shapes. 1200x400 pixels banner format.\"\"\"
+          try:
+              os.makedirs('assets', exist_ok=True)
+              response = model.generate_content(prompt, generation_config={'response_modalities': ['IMAGE']})
+              for part in response.candidates[0].content.parts:
+                  if hasattr(part, 'inline_data') and part.inline_data:
+                      with open('assets/dashboard_header.png', 'wb') as f:
+                          f.write(part.inline_data.data)
+                      print('Generated weekly banner image.')
+                      break
+          except Exception as e:
+              print('Failed to generate weekly banner:', e)
+          "
+          # Run PDF generator
+          python scripts/output/weekly_pdf_generator.py
+
+      - name: Commit and Push Weekly Report
+        run: |
+          git config --global user.name  "Sentinel SecOps Bot"
+          git config --global user.email "sentinel-bot@users.noreply.github.com"
+          git add reports/weekly/ assets/dashboard_header.png
+          git diff --staged --quiet || git commit -m "Auto-update: Weekly Executive Report $(date '+%Y-W%V')"
+          git push

@@ -1,0 +1,17 @@
+{
+  "organization": "Sentinel Enterprise",
+  "tech_stack": [
+    "Apache HTTP Server",
+    "Windows Server 2019",
+    "VMware ESXi",
+    "PostgreSQL",
+    "nginx",
+    "Python",
+    "Node.js"
+  ],
+  "critical_systems": [
+    "ERP",
+    "Active Directory",
+    "VPN Gateway"
+  ]
+}

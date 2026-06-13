@@ -1,0 +1,4 @@
+requests
+google-generativeai
+fpdf2
+pandas

@@ -28,7 +28,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install Dependencies
-        run: pip install requests google-generativeai fpdf2
+        run: pip install requests google-generativeai fpdf2 pandas
 
       - name: Run Sentinel SecOps
         env:
