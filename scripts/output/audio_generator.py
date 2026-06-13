@@ -4,7 +4,7 @@ import google.generativeai as genai
 
 def generate_audio_briefing(text_script, date_str, hour_str):
     """
-    Generates an audio briefing using gemini-2.5-flash-preview-tts and voice Charon.
+    Generates an audio briefing using the proprietary TTS model and voice Charon.
     Saves to reports/audio/briefing_YYYY-MM-DD_HH.mp3 and copies to reports/audio/latest.mp3
     """
     os.makedirs(os.path.join("reports", "audio"), exist_ok=True)
@@ -60,9 +60,9 @@ def generate_audio_briefing(text_script, date_str, hour_str):
             print(f"Copied audio to {latest_filename}")
             return filename
         else:
-            print("No audio bytes returned in the Gemini TTS response.")
+            print("No audio bytes returned in the AI TTS response.")
             return None
             
     except Exception as e:
-        print(f"Failed to generate audio briefing via Gemini TTS: {e}")
+        print(f"Failed to generate audio briefing via AI TTS: {e}")
         return None

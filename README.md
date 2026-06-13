@@ -4,12 +4,12 @@ An Automated Threat Intelligence and Vulnerability Management Platform.
 
 This repository tracks the latest Common Vulnerabilities and Exposures (CVEs) from the National Vulnerability Database (NVD) and cross-references them with industry-leading intelligence feeds including FIRST EPSS, CISA KEV, ThreatFox, and GitHub Security Advisories. 
 
-The analysis is enhanced by AI models (Google Gemini 2.0) to provide structured impact analysis and mitigation recommendations.
+The analysis is enhanced by AI models from Pedroxious Lab to provide structured impact analysis and mitigation recommendations.
 
 ## Project Architecture
 
 - **Threat Intel Feeds**: Direct API ingestion from NVD, CISA, FIRST, and abuse.ch.
-- **AI Processing**: Google Gemini transforms raw CVE descriptions into actionable insights.
+- **AI Processing**: Pedroxious Lab AI models transform raw CVE descriptions into actionable insights.
 - **Reporting Engine**: Automated pipeline built in Python. Reports are dynamically generated as professional PDF documents (`fpdf2`) and backed up to a minimalistic HTML dashboard interface.
 - **Data Persistence**: A comprehensive CSV database (`dashboards/historico.csv`) tracks all processed vulnerabilities.
 - **Automation**: Fully managed via GitHub Actions.
@@ -17,13 +17,13 @@ The analysis is enhanced by AI models (Google Gemini 2.0) to provide structured 
 ## Current Network Status
 
 <!-- STATUS_START -->
-**Last Update:** 2026-06-13 08:34 (BRT)
+**Last Update:** 2026-06-13 09:05 (BRT)
 
 **Network Status:** ATTENTION
 
 **Critical CVEs Today:** 0
 
-**[Download Latest PDF Report](pdf_reports/Report_2026-06-13_08-34.pdf)**
+**[Download Latest PDF Report](pdf_reports/Report_2026-06-13_09-05.pdf)**
 
 **[View Minimal HTML Dashboard](index.html)**
 
