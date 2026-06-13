@@ -17,13 +17,13 @@ The analysis is enhanced by AI models (Google Gemini 2.0) to provide structured 
 ## Current Network Status
 
 <!-- STATUS_START -->
-**Last Update:** 2026-06-12 18:56 (BRT)
+**Last Update:** 2026-06-13 07:24 (BRT)
 
 **Network Status:** ATTENTION
 
 **Critical CVEs Today:** 0
 
-**[Download Latest PDF Report](pdf_reports/Report_2026-06-12_18-56.pdf)**
+**[Download Latest PDF Report](pdf_reports/Report_2026-06-13_07-24.pdf)**
 
 **[View Minimal HTML Dashboard](index.html)**
 
