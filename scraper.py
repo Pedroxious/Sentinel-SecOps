@@ -1065,7 +1065,7 @@ REGRAS DE COMPORTAMENTO:
             
             try {{
                 // Request Gemini 3.1 Flash Lite
-                const url = `https://generativelanguagedevices.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${{API_KEY}}`;
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${{API_KEY}}`;
                 
                 const response = await fetch(url, {{
                     method: 'POST',
