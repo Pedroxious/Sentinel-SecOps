@@ -1921,7 +1921,7 @@ REGRAS DE COMPORTAMENTO:
         API_KEY = localStorage.getItem("GEMINI_API_KEY") || "";
     }}
     const MAX_QUOTA = 20;
-    const GEMINI_MODEL = "gemini-3.5-flash";
+    const GEMINI_MODEL = "gemini-3.1-flash";
 
     const AERIS_SYSTEM_PROMPT = `{chat_system_context}`;
 
