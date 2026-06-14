@@ -24,8 +24,8 @@ NVD_API_KEY    = os.getenv("NVD_API_KEY")
 
 genai.configure(api_key=GEMINI_API_KEY)
 
-# Using gemini-3.1-flash-lite as principal model
-MODEL_NAME = "gemini-3.1-flash-lite"
+# Using gemini-3.5-flash as principal model
+MODEL_NAME = "gemini-3.5-flash"
 model = genai.GenerativeModel(MODEL_NAME)
 
 CSV_PATH = os.path.join("dashboards", "historico.csv")
@@ -596,906 +596,1702 @@ REGRAS DE COMPORTAMENTO:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel SecOps - Threat Dashboard</title>
-    <!-- Modern Typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <title>Sentinel SecOps — Pedroxious Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
+        /* ═══════════════════════════════════════════════════════
+           DESIGN TOKENS — Pedroxious Lab palette
+        ═══════════════════════════════════════════════════════ */
         :root {{
-            --bg-dark: #07080c;        /* Midnight obsidian */
-            --card-bg: #0d0f17;        /* Clean metallic card bg */
-            --border-color: #1a1e2f;    /* Sleek border color */
-            
-            --accent-emerald: #10b981;  /* Cyber Security Green */
-            --accent-purple: #8b5cf6;   /* Cyber Purple */
-            --accent-cyan: #06b6d4;     /* Neon Cyan */
-            --accent-blue: #3b82f6;     /* Deep Blue */
-            
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            
-            --red-alert: #ef4444;
-            --green-ok: #22c55e;
-            --yellow-warning: #eab308;
+            --bg:           #07080c;
+            --bg-sidebar:   #0a0b10;
+            --bg-card:      #0d0f17;
+            --bg-input:     #0f111a;
+            --bg-hover:     rgba(255,255,255,0.03);
+            --border:       #1a1e2f;
+            --border-soft:  rgba(255,255,255,0.05);
+
+            --green:        #10b981;
+            --green-dim:    rgba(16,185,129,0.12);
+            --green-glow:   rgba(16,185,129,0.08);
+            --purple:       #8b5cf6;
+            --cyan:         #06b6d4;
+            --blue:         #3b82f6;
+
+            --text:         #f1f5f9;
+            --text-muted:   #64748b;
+            --text-sub:     #94a3b8;
+
+            --red:          #ef4444;
+            --yellow:       #eab308;
+            --ok:           #22c55e;
+
+            --radius-sm:    6px;
+            --radius-md:    10px;
+            --radius-lg:    16px;
+            --radius-xl:    24px;
+            --sidebar-w:    260px;
         }}
-        
-        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-        
+
+        *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+
+        html, body {{ height: 100%; }}
+
         body {{
-            margin: 0;
-            padding: 0;
-            background: var(--bg-dark);
-            color: var(--text-primary);
+            background: var(--bg);
+            color: var(--text);
             font-family: 'Outfit', sans-serif;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
+            overflow: hidden;
         }}
-        
-        .app-container {{
-            width: 100%;
-            max-width: 960px;
-            padding: 2.5rem 1.5rem;
+
+        /* ═══════════════════════════════════════════════════════
+           SIDEBAR
+        ═══════════════════════════════════════════════════════ */
+        .sidebar {{
+            width: var(--sidebar-w);
+            min-width: var(--sidebar-w);
+            height: 100vh;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            gap: 3.5rem;
+            padding: 0;
+            position: relative;
+            z-index: 10;
+            transition: transform 0.28s cubic-bezier(.4,0,.2,1);
         }}
-        
-        /* Clean Top Navigation Bar Header */
-        .top-bar {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 1.25rem;
-            border-bottom: 1px solid var(--border-color);
-        }}
-        
-        .top-bar-left {{
+
+        .sidebar-logo {{
             display: flex;
             align-items: center;
+            gap: 10px;
+            padding: 20px 18px 16px;
+            border-bottom: 1px solid var(--border);
         }}
-        
-        .logo-text {{
-            font-size: 1.45rem;
+
+        .sidebar-logo-icon {{
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--green-dim);
+            border: 1px solid rgba(16,185,129,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--green);
+            flex-shrink: 0;
+        }}
+
+        .sidebar-logo-icon svg {{ width: 16px; height: 16px; }}
+
+        .sidebar-logo-text {{
+            font-size: 0.88rem;
             font-weight: 700;
-            background: linear-gradient(to right, var(--accent-emerald), var(--accent-cyan));
+            letter-spacing: 0.3px;
+            background: linear-gradient(90deg, var(--green), var(--cyan));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }}
+
+        .sidebar-logo-sub {{
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            -webkit-text-fill-color: var(--text-muted);
             letter-spacing: 0.5px;
+            text-transform: uppercase;
         }}
-        
-        .top-bar-right {{
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+
+        .sidebar-section {{
+            padding: 12px 10px 4px;
         }}
-        
-        .workspace-tag {{
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            border: 1px solid var(--border-color);
-            background: rgba(255, 255, 255, 0.02);
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+
+        .sidebar-section-label {{
+            font-size: 0.65rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
+            color: var(--text-muted);
+            padding: 0 8px 8px;
         }}
-        
-        /* 1. Centered Chat Workspace Section */
-        .chat-container-layout {{
+
+        .sidebar-btn {{
             display: flex;
-            flex-direction: column;
+            align-items: center;
+            gap: 10px;
             width: 100%;
-            min-height: 450px;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 2rem;
-            box-shadow: 0 10px 35px rgba(0,0,0,0.5);
-            position: relative;
-        }}
-        
-        .chat-welcome-container {{
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            margin: 2.5rem 0;
-            transition: all 0.3s ease;
-        }}
-        
-        .chat-welcome-container.hidden {{
-            display: none;
-        }}
-        
-        .chat-welcome-container h2 {{
-            font-size: 2.1rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-            background: linear-gradient(to right, var(--text-primary), var(--text-secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }}
-        
-        .chat-welcome-container p {{
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-        }}
-        
-        .chat-history-list {{
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-            padding: 0.5rem;
-            overflow-y: auto;
-            max-height: 380px;
-            margin-bottom: 1.25rem;
-            scroll-behavior: smooth;
-        }}
-        
-        .chat-history-list.empty {{
-            display: none;
-        }}
-        
-        /* Chat Message Rows and Bubbles */
-        .chat-msg-row {{
-            display: flex;
-            width: 100%;
-        }}
-        
-        .chat-msg-row.row-user {{
-            justify-content: flex-end;
-        }}
-        
-        .chat-msg-row.row-bot {{
-            justify-content: flex-start;
-        }}
-        
-        .bubble {{
-            max-width: 78%;
-            padding: 0.85rem 1.25rem;
-            border-radius: 18px;
-            font-size: 0.95rem;
-            line-height: 1.5;
-            position: relative;
-            word-wrap: break-word;
-        }}
-        
-        .row-user .bubble {{
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-            color: #fff;
-            border-bottom-right-radius: 3px;
-            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
-        }}
-        
-        .row-bot .bubble {{
-            background: #141724;
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            border-bottom-left-radius: 3px;
-        }}
-        
-        .msg-meta {{
-            font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.4);
-            margin-top: 0.35rem;
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.5rem;
-        }}
-        
-        .row-bot .msg-meta {{
-            color: var(--text-secondary);
-        }}
-        
-        .chat-loading {{
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }}
-        
-        .spinner {{
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(16, 185, 129, 0.15);
-            border-top: 2px solid var(--accent-emerald);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }}
-        
-        @keyframes spin {{
-            0% {{ transform: rotate(0deg); }}
-            100% {{ transform: rotate(360deg); }}
-        }}
-        
-        /* Dynamic Centered pill-shaped text area */
-        .chat-input-wrapper {{
-            background: #090a10;
-            border: 1px solid var(--border-color);
-            border-radius: 28px;
-            padding: 0.55rem 1.25rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            transition: all 0.2s ease-in-out;
-        }}
-        
-        .chat-input-wrapper:focus-within {{
-            border-color: var(--accent-emerald);
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.12);
-        }}
-        
-        .chat-input-wrapper textarea {{
-            flex-grow: 1;
+            padding: 9px 10px;
+            border-radius: var(--radius-sm);
             background: transparent;
             border: none;
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: 0.95rem;
-            resize: none;
-            outline: none;
-            height: 24px;
-            line-height: 24px;
+            color: var(--text-sub);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.15s, color 0.15s;
+            text-decoration: none;
         }}
-        
-        .chat-input-wrapper textarea::placeholder {{
-            color: var(--text-secondary);
-        }}
-        
-        .chat-input-actions {{
+
+        .sidebar-btn:hover {{ background: var(--bg-hover); color: var(--text); }}
+        .sidebar-btn.active {{ background: var(--green-dim); color: var(--green); }}
+
+        .sidebar-btn svg {{ width: 15px; height: 15px; flex-shrink: 0; }}
+
+        .sidebar-btn-new {{
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 10px;
+            width: calc(100% - 20px);
+            margin: 14px 10px;
+            padding: 9px 14px;
+            border-radius: var(--radius-md);
+            background: var(--green-dim);
+            border: 1px solid rgba(16,185,129,0.2);
+            color: var(--green);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }}
+
+        .sidebar-btn-new:hover {{
+            background: rgba(16,185,129,0.2);
+            border-color: rgba(16,185,129,0.4);
+        }}
+
+        .sidebar-btn-new svg {{ width: 14px; height: 14px; }}
+
+        .sidebar-history {{
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 10px 10px;
+        }}
+
+        .sidebar-history::-webkit-scrollbar {{ width: 3px; }}
+        .sidebar-history::-webkit-scrollbar-track {{ background: transparent; }}
+        .sidebar-history::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 2px; }}
+
+        .history-item {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            transition: background 0.12s, color 0.12s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }}
+
+        .history-item:hover {{ background: var(--bg-hover); color: var(--text-sub); }}
+        .history-item svg {{ width: 12px; height: 12px; flex-shrink: 0; opacity: 0.5; }}
+
+        .sidebar-footer {{
+            padding: 12px 10px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }}
+
+        .sidebar-user {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.15s;
+        }}
+
+        .sidebar-user:hover {{ background: var(--bg-hover); }}
+
+        .sidebar-avatar {{
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--purple), var(--cyan));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: white;
             flex-shrink: 0;
         }}
-        
-        .chat-model-badge {{
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 0.2rem 0.65rem;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            font-family: 'JetBrains Mono', monospace;
+
+        .sidebar-user-info {{ display: flex; flex-direction: column; }}
+        .sidebar-user-name {{ font-size: 0.82rem; font-weight: 600; color: var(--text); }}
+        .sidebar-user-role {{ font-size: 0.68rem; color: var(--text-muted); }}
+
+        /* ═══════════════════════════════════════════════════════
+           MAIN AREA
+        ═══════════════════════════════════════════════════════ */
+        .main {{
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
         }}
-        
-        .btn-send-pill {{
-            background: var(--accent-emerald);
+
+        /* ─── Top bar ─────────────────────────────────────── */
+        .topbar {{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            height: 56px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            background: var(--bg);
+        }}
+
+        .topbar-left {{ display: flex; align-items: center; gap: 12px; }}
+
+        .btn-hamburger {{
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 32px; height: 32px;
+            border-radius: var(--radius-sm);
+            background: transparent;
             border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            color: #05060a;
-            font-weight: bold;
+            color: var(--text-muted);
             cursor: pointer;
+        }}
+
+        .btn-hamburger:hover {{ background: var(--bg-hover); color: var(--text); }}
+        .btn-hamburger svg {{ width: 18px; height: 18px; }}
+
+        .topbar-title {{
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-sub);
+        }}
+
+        .topbar-right {{ display: flex; align-items: center; gap: 8px; }}
+
+        .topbar-badge {{
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.02);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+
+        .status-dot {{
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green);
+            animation: pulse-dot 2s infinite;
+        }}
+
+        @keyframes pulse-dot {{
+            0%, 100% {{ opacity: 1; }}
+            50% {{ opacity: 0.4; }}
+        }}
+
+        /* ─── Scrollable content area ─────────────────────── */
+        .content-scroll {{
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }}
+
+        .content-scroll::-webkit-scrollbar {{ width: 4px; }}
+        .content-scroll::-webkit-scrollbar-track {{ background: transparent; }}
+        .content-scroll::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 2px; }}
+
+        /* ═══════════════════════════════════════════════════════
+           CHAT SECTION — fills 100vh first
+        ═══════════════════════════════════════════════════════ */
+        .chat-section {{
+            min-height: calc(100vh - 56px);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }}
+
+        /* Welcome screen */
+        .chat-welcome {{
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px 20px;
+            text-align: center;
+        }}
+
+        .chat-welcome.hidden {{ display: none; }}
+
+        .aeris-orb {{
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, rgba(16,185,129,0.3), rgba(6,182,212,0.1));
+            border: 1px solid rgba(16,185,129,0.25);
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+            position: relative;
+        }}
+
+        .aeris-orb::after {{
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 1px solid rgba(16,185,129,0.08);
+        }}
+
+        .aeris-orb svg {{ width: 24px; height: 24px; color: var(--green); }}
+
+        .chat-welcome h1 {{
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }}
+
+        .chat-welcome p {{
+            font-size: 0.92rem;
+            color: var(--text-sub);
+            max-width: 420px;
+            line-height: 1.55;
+        }}
+
+        /* Suggestion chips */
+        .suggestion-grid {{
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            width: 100%;
+            max-width: 560px;
+            margin-top: 28px;
+        }}
+
+        .chip {{
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.82rem;
+            color: var(--text-sub);
+            text-align: left;
+            transition: all 0.15s;
+            line-height: 1.4;
+        }}
+
+        .chip:hover {{
+            background: var(--bg-hover);
+            border-color: rgba(16,185,129,0.2);
+            color: var(--text);
+        }}
+
+        .chip svg {{ width: 14px; height: 14px; color: var(--green); flex-shrink: 0; margin-top: 1px; }}
+
+        /* Messages area */
+        .chat-messages {{
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            gap: 0;
+            padding: 24px 0 16px;
+            overflow-y: auto;
+        }}
+
+        .chat-messages.visible {{ display: flex; }}
+        .chat-messages::-webkit-scrollbar {{ width: 4px; }}
+        .chat-messages::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 2px; }}
+
+        /* Message rows */
+        .msg-row {{
+            display: flex;
+            padding: 8px 24px;
+            animation: msg-in 0.18s ease;
+        }}
+
+        @keyframes msg-in {{
+            from {{ opacity: 0; transform: translateY(6px); }}
+            to   {{ opacity: 1; transform: translateY(0); }}
+        }}
+
+        .msg-row.user {{ justify-content: flex-end; }}
+        .msg-row.bot  {{ justify-content: flex-start; }}
+
+        .msg-row.bot .msg-inner {{
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            max-width: 78%;
+        }}
+
+        .msg-row.user .msg-inner {{
+            max-width: 72%;
+        }}
+
+        .bot-av {{
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            background: var(--green-dim);
+            border: 1px solid rgba(16,185,129,0.2);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+            color: var(--green);
+        }}
+
+        .bot-av svg {{ width: 13px; height: 13px; }}
+
+        .bubble {{
+            padding: 11px 15px;
+            border-radius: var(--radius-lg);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }}
+
+        .bubble.user-bubble {{
+            background: var(--green);
+            color: #07080c;
+            font-weight: 500;
+            border-bottom-right-radius: 4px;
+        }}
+
+        .bubble.bot-bubble {{
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-bottom-left-radius: 4px;
+        }}
+
+        .msg-meta {{
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            padding: 0 4px;
+        }}
+
+        /* Typing indicator */
+        .typing-row {{ display: flex; align-items: flex-start; gap: 12px; padding: 8px 24px; }}
+
+        .typing-dots {{
+            display: flex; gap: 4px; align-items: center;
+            padding: 14px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            border-bottom-left-radius: 4px;
+        }}
+
+        .typing-dots span {{
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            animation: bounce 1.3s infinite ease-in-out both;
+        }}
+
+        .typing-dots span:nth-child(1) {{ animation-delay: -0.3s; }}
+        .typing-dots span:nth-child(2) {{ animation-delay: -0.15s; }}
+
+        @keyframes bounce {{
+            0%, 80%, 100% {{ transform: scale(0.6); opacity: 0.4; }}
+            40%            {{ transform: scale(1); opacity: 1; }}
+        }}
+
+        /* ─── Input bar ───────────────────────────────────── */
+        .chat-input-area {{
+            padding: 12px 20px 20px;
+            background: var(--bg);
+            border-top: 1px solid var(--border-soft);
+            flex-shrink: 0;
+        }}
+
+        .chat-error {{
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.8rem; color: var(--red);
+            margin-bottom: 8px; padding: 0 4px;
+        }}
+
+        .chat-error svg {{ width: 13px; height: 13px; }}
+
+        .input-pill {{
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            padding: 10px 10px 10px 18px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            transition: border-color 0.2s;
+        }}
+
+        .input-pill:focus-within {{
+            border-color: rgba(16,185,129,0.35);
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.05);
+        }}
+
+        .input-pill textarea {{
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: none;
+            height: 22px;
+            max-height: 140px;
+            overflow-y: auto;
+        }}
+
+        .input-pill textarea::placeholder {{ color: var(--text-muted); }}
+        .input-pill textarea::-webkit-scrollbar {{ width: 3px; }}
+        .input-pill textarea::-webkit-scrollbar-thumb {{ background: var(--border); }}
+
+        .input-pill-meta {{
+            display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+        }}
+
+        .input-workspace-tag {{
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            white-space: nowrap;
+        }}
+
+        .btn-send {{
+            width: 34px; height: 34px;
+            border-radius: 50%;
+            background: var(--green);
+            border: none;
+            color: #07080c;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }}
+
+        .btn-send:hover {{ opacity: 0.88; transform: scale(1.05); }}
+        .btn-send:active {{ transform: scale(0.95); }}
+        .btn-send:disabled {{ background: var(--border); color: var(--text-muted); cursor: not-allowed; transform: none; }}
+        .btn-send svg {{ width: 14px; height: 14px; }}
+
+        .btn-spinner {{
+            width: 14px; height: 14px;
+            border: 2px solid rgba(7,8,12,0.2);
+            border-top: 2px solid #07080c;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }}
+
+        @keyframes spin {{ to {{ transform: rotate(360deg); }} }}
+
+        .input-footer {{
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: opacity 0.2s;
+            margin-top: 8px;
+            gap: 6px;
         }}
-        
-        .btn-send-pill:hover {{
-            opacity: 0.9;
+
+        .quota-text {{
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: center;
         }}
-        
-        .btn-send-pill:disabled {{
-            background: #1f2231;
-            color: var(--text-secondary);
-            cursor: not-allowed;
+
+        .quota-warn {{
+            display: flex; align-items: center; gap: 4px;
+            color: var(--yellow); font-size: 0.72rem;
         }}
-        
-        /* 2. Enhanced Threat Dashboard section (aligned below chatbot) */
+
+        .quota-warn svg {{ width: 12px; height: 12px; }}
+
+        /* ═══════════════════════════════════════════════════════
+           SCROLL CUE
+        ═══════════════════════════════════════════════════════ */
+        .scroll-cue {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px 0 0;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            cursor: pointer;
+            transition: color 0.15s;
+            flex-shrink: 0;
+            border-top: 1px solid var(--border-soft);
+        }}
+
+        .scroll-cue:hover {{ color: var(--text-sub); }}
+        .scroll-cue svg {{ width: 12px; height: 12px; animation: bob 2s ease-in-out infinite; }}
+
+        @keyframes bob {{
+            0%, 100% {{ transform: translateY(0); }}
+            50%       {{ transform: translateY(3px); }}
+        }}
+
+        /* ═══════════════════════════════════════════════════════
+           DASHBOARD SECTION
+        ═══════════════════════════════════════════════════════ */
         .dashboard-section {{
-            border-top: 1px solid var(--border-color);
-            padding-top: 3rem;
+            padding: 40px 24px 60px;
             display: flex;
             flex-direction: column;
-            gap: 2.5rem;
+            gap: 28px;
+            border-top: 1px solid var(--border);
         }}
-        
-        .dashboard-section-header {{
+
+        .dash-header {{
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            align-items: center;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 12px;
         }}
-        
-        .dashboard-section-header h2 {{
-            font-size: 1.6rem;
+
+        .dash-header-left {{ display: flex; align-items: center; gap: 12px; }}
+
+        .dash-title {{
+            font-size: 1.05rem;
             font-weight: 700;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            color: var(--text);
         }}
-        
-        .dashboard-section-meta {{
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+
+        .dash-subtitle {{ font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }}
+
+        .dash-live-badge {{
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.68rem; font-weight: 600;
+            padding: 3px 10px; border-radius: 20px;
+            border: 1px solid rgba(16,185,129,0.25);
+            background: var(--green-dim);
+            color: var(--green);
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }}
+
+        .dash-pdf-link {{
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
             background: rgba(255,255,255,0.02);
-            padding: 0.45rem 0.9rem;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
+            color: var(--text-sub);
+            font-size: 0.78rem; font-weight: 500;
+            text-decoration: none;
+            transition: all 0.15s;
         }}
-        
-        /* Modernized Metric Card grid */
-        .db-metrics-grid {{
+
+        .dash-pdf-link:hover {{ border-color: rgba(16,185,129,0.2); color: var(--green); }}
+        .dash-pdf-link svg {{ width: 13px; height: 13px; }}
+
+        /* ─── Metric cards grid ───────────────────────────── */
+        .metrics-grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
         }}
-        
-        .db-metric-card {{
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
+
+        .metric-card {{
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 18px;
             position: relative;
             overflow: hidden;
-            transition: all 0.2s;
+            transition: transform 0.15s, border-color 0.15s;
         }}
-        
-        .db-metric-card:hover {{
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.08);
-            border-color: rgba(16, 185, 129, 0.25);
-        }}
-        
-        .db-metric-card h4 {{
-            font-size: 0.78rem;
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            letter-spacing: 0.5px;
-            margin-bottom: 0.5rem;
-        }}
-        
-        .db-metric-value {{
-            font-size: 2.25rem;
-            font-weight: 700;
-            color: var(--text-primary);
-        }}
-        
-        .db-metric-icon {{
+
+        .metric-card:hover {{ transform: translateY(-1px); }}
+
+        .metric-card::before {{
+            content: '';
             position: absolute;
-            right: 1.25rem;
-            bottom: 1.25rem;
-            font-size: 1.8rem;
-            opacity: 0.2;
+            top: 0; left: 0; right: 0;
+            height: 2px;
         }}
-        
-        /* Threat of the Week highlighted styled card */
-        .threat-of-week-card {{
-            background: linear-gradient(145deg, #0d0f16, #12091c);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            border-radius: 12px;
-            padding: 2rem;
-        }}
-        
-        .tow-header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 1.25rem;
-        }}
-        
-        .tow-badge {{
-            background: var(--red-alert);
-            color: #fff;
-            padding: 0.35rem 0.85rem;
-            border-radius: 9999px;
-            font-size: 0.8rem;
-            font-weight: 700;
+
+        .metric-card.red::before   {{ background: var(--red); }}
+        .metric-card.purple::before {{ background: var(--purple); }}
+        .metric-card.yellow::before {{ background: var(--yellow); }}
+        .metric-card.cyan::before   {{ background: var(--cyan); }}
+
+        .metric-label {{
+            font-size: 0.7rem;
+            text-transform: uppercase;
             letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            font-weight: 600;
         }}
-        
-        .progress-bar-container {{
-            background: rgba(255,255,255,0.06);
-            border-radius: 6px;
-            height: 8px;
+
+        .metric-value {{
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+            font-family: 'JetBrains Mono', monospace;
+        }}
+
+        .metric-icon {{
+            position: absolute;
+            bottom: 14px; right: 14px;
+            opacity: 0.08;
+            color: var(--text);
+            transition: opacity 0.2s;
+        }}
+
+        .metric-icon svg {{ width: 24px; height: 24px; }}
+        .metric-card:hover .metric-icon {{ opacity: 0.2; }}
+
+        /* ─── Threat of the Week ──────────────────────────── */
+        .threat-card {{
+            background: var(--bg-card);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: var(--radius-lg);
+            padding: 22px 24px;
+            position: relative;
             overflow: hidden;
-            width: 100%;
-            margin-top: 0.5rem;
         }}
-        
-        .progress-bar {{
-            background: linear-gradient(to right, var(--accent-cyan), var(--red-alert));
-            height: 100%;
-            border-radius: 6px;
+
+        .threat-card::before {{
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, var(--red), transparent);
         }}
-        
-        .tow-action {{
-            background: rgba(0,0,0,0.2);
-            border-left: 3px solid var(--accent-emerald);
-            padding: 1rem 1.25rem;
-            border-radius: 6px;
-            margin-top: 1.25rem;
+
+        .threat-header {{
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 10px; margin-bottom: 14px;
         }}
-        
-        /* Modernized table styling */
-        .db-table-wrapper {{
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
+
+        .threat-badge {{
+            font-size: 0.65rem; font-weight: 700;
+            padding: 3px 10px; border-radius: 20px;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.25);
+            color: var(--red);
+            text-transform: uppercase; letter-spacing: 0.8px;
+        }}
+
+        .threat-id {{
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem; font-weight: 700;
+            color: var(--text);
+        }}
+
+        .threat-summary {{ font-size: 0.85rem; color: var(--text-sub); line-height: 1.55; margin-bottom: 14px; }}
+
+        .threat-score-row {{ display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }}
+
+        .progress-track {{
+            flex: 1; height: 5px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 3px; overflow: hidden;
+        }}
+
+        .progress-fill {{
+            height: 100%; border-radius: 3px;
+            background: linear-gradient(90deg, var(--cyan), var(--red));
+        }}
+
+        .progress-label {{ font-size: 0.78rem; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: var(--red); white-space: nowrap; }}
+
+        .threat-action {{
+            background: rgba(16,185,129,0.04);
+            border-left: 2px solid var(--green);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 12px 14px;
+        }}
+
+        .threat-action strong {{ font-size: 0.78rem; color: var(--green); display: block; margin-bottom: 4px; font-weight: 600; }}
+        .threat-action p {{ font-size: 0.82rem; color: var(--text-sub); line-height: 1.5; }}
+
+        /* ─── Table ───────────────────────────────────────── */
+        .table-wrapper {{
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
             overflow-x: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }}
-        
-        .db-table {{
+
+        .dash-table {{
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.95rem;
+            font-size: 0.83rem;
         }}
-        
-        .db-table th {{
-            background: rgba(0, 0, 0, 0.25);
-            padding: 1.1rem 1.25rem;
+
+        .dash-table th {{
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.2);
+            color: var(--text-muted);
             font-weight: 600;
-            color: var(--text-secondary);
-            border-bottom: 1px solid var(--border-color);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             text-align: left;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
         }}
-        
-        .db-table td {{
-            padding: 1.1rem 1.25rem;
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-primary);
+
+        .dash-table td {{
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-soft);
+            color: var(--text);
+            vertical-align: middle;
         }}
-        
-        .db-table tr:last-child td {{
-            border-bottom: none;
+
+        .dash-table tbody tr:last-child td {{ border-bottom: none; }}
+
+        .dash-table tbody tr:hover td {{ background: var(--bg-hover); }}
+
+        .cve-id-cell {{
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            font-weight: 500;
+            color: var(--text);
         }}
-        
-        .db-table tr:hover td {{
-            background: rgba(255, 255, 255, 0.012);
-        }}
-        
-        /* Score indicators */
-        .cve-score-pill {{
+
+        /* Score pill */
+        .score-pill {{
             font-family: 'JetBrains Mono', monospace;
             font-weight: 700;
-            padding: 0.25rem 0.55rem;
-            border-radius: 6px;
-            font-size: 0.88rem;
-        }}
-        .cve-score-high {{ background: rgba(239, 68, 68, 0.12); color: var(--red-alert); }}
-        .cve-score-medium {{ background: rgba(234, 179, 8, 0.12); color: var(--yellow-warning); }}
-        .cve-score-low {{ background: rgba(59, 130, 246, 0.12); color: var(--accent-blue); }}
-        
-        /* SLA badges */
-        .sla-badge {{
             font-size: 0.78rem;
-            font-weight: 600;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
+            padding: 3px 8px;
+            border-radius: 5px;
+            display: inline-block;
         }}
-        .sla-critical {{ background: rgba(239, 68, 68, 0.15); color: var(--red-alert); border: 1px solid rgba(239, 68, 68, 0.25); }}
-        .sla-high {{ background: rgba(234, 179, 8, 0.15); color: var(--yellow-warning); border: 1px solid rgba(234, 179, 8, 0.25); }}
-        .sla-medium {{ background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); border: 1px solid rgba(59, 130, 246, 0.25); }}
-        .sla-low {{ background: rgba(148, 163, 184, 0.15); color: var(--text-secondary); border: 1px solid rgba(148, 163, 184, 0.25); }}
-        
-        /* Details layout drop down */
-        .db-detail-row td {{
-            padding: 0;
+
+        .score-critical {{ background: rgba(239,68,68,0.12); color: var(--red); }}
+        .score-high     {{ background: rgba(234,179,8,0.12);  color: var(--yellow); }}
+        .score-medium   {{ background: rgba(59,130,246,0.12); color: var(--blue); }}
+        .score-low      {{ background: rgba(100,116,139,0.12); color: var(--text-muted); }}
+
+        /* SLA badge */
+        .sla-badge {{
+            font-size: 0.68rem; font-weight: 700;
+            padding: 2px 7px; border-radius: 4px;
+            text-transform: uppercase; letter-spacing: 0.4px;
         }}
-        
-        .db-detail-box {{
-            background: rgba(0, 0, 0, 0.2);
-            border-left: 4px solid var(--accent-emerald);
-            padding: 1.5rem;
+
+        .sla-critical {{ background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }}
+        .sla-high     {{ background: rgba(234,179,8,0.12);  color: var(--yellow); border: 1px solid rgba(234,179,8,0.2); }}
+        .sla-medium   {{ background: rgba(59,130,246,0.12); color: var(--blue); border: 1px solid rgba(59,130,246,0.2); }}
+        .sla-low      {{ background: rgba(100,116,139,0.1); color: var(--text-muted); border: 1px solid var(--border); }}
+
+        /* Exploit / trend icons */
+        .exploit-yes {{ color: var(--red); }}
+        .exploit-no  {{ color: var(--text-muted); }}
+        .trend-up    {{ color: var(--red); }}
+        .trend-down  {{ color: var(--ok); }}
+        .trend-stable {{ color: var(--text-muted); }}
+
+        .icon-cell svg {{ width: 14px; height: 14px; vertical-align: middle; }}
+
+        /* Stack badge */
+        .stack-tag {{
+            font-size: 0.6rem; font-weight: 700; padding: 1px 5px;
+            border-radius: 3px; background: rgba(234,179,8,0.1);
+            color: var(--yellow); border: 1px solid rgba(234,179,8,0.2);
+            text-transform: uppercase; margin-left: 5px;
+        }}
+
+        /* Detail button */
+        .btn-detail {{
+            padding: 4px 10px; border-radius: 5px;
+            background: var(--green-dim);
+            border: 1px solid rgba(16,185,129,0.2);
+            color: var(--green);
+            font-size: 0.72rem; font-weight: 600;
+            cursor: pointer; font-family: 'Outfit', sans-serif;
+            transition: all 0.15s; white-space: nowrap;
+        }}
+
+        .btn-detail:hover {{ background: rgba(16,185,129,0.2); }}
+
+        /* Expandable row */
+        .detail-row {{ display: none; }}
+        .detail-row.open {{ display: table-row; }}
+
+        .detail-box {{
+            padding: 16px 20px;
+            background: rgba(0,0,0,0.15);
+            border-left: 2px solid var(--green);
             display: flex;
             flex-direction: column;
-            gap: 0.85rem;
+            gap: 10px;
         }}
-        
-        .db-detail-grid {{
+
+        .detail-grid {{
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 10px;
         }}
-        
-        .db-detail-field {{
-            font-size: 0.9rem;
-            color: var(--text-secondary);
+
+        .detail-field {{ font-size: 0.82rem; color: var(--text-sub); line-height: 1.5; }}
+        .detail-field strong {{ color: var(--text); font-weight: 600; }}
+
+        .detail-action {{
+            background: rgba(16,185,129,0.04);
+            border: 1px solid rgba(16,185,129,0.12);
+            border-radius: var(--radius-sm);
+            padding: 12px 14px;
         }}
-        
-        .db-detail-field strong {{
-            color: var(--text-primary);
-        }}
-        
-        .db-action-box {{
-            background: rgba(16, 185, 129, 0.03);
-            border: 1px solid rgba(16, 185, 129, 0.12);
-            border-radius: 8px;
-            padding: 1rem 1.25rem;
-            margin-top: 0.5rem;
-        }}
-        
-        .db-action-box strong {{
-            color: var(--accent-emerald);
-            display: block;
-            margin-bottom: 0.35rem;
-        }}
-        
-        .db-btn-detail {{
-            background: rgba(16, 185, 129, 0.08);
-            color: var(--accent-emerald);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            padding: 0.35rem 0.7rem;
-            border-radius: 6px;
-            cursor: pointer;
+
+        .detail-action strong {{ color: var(--green); display: block; margin-bottom: 4px; font-size: 0.8rem; }}
+        .detail-action p {{ font-size: 0.82rem; color: var(--text-sub); line-height: 1.5; }}
+
+        .table-empty {{
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
             font-size: 0.85rem;
-            font-weight: 600;
-            transition: all 0.2s;
         }}
-        
-        .db-btn-detail:hover {{
-            background: var(--accent-emerald);
-            color: #0d0f17;
-        }}
-        
-        .section-divider {{
-            border: none;
-            border-top: 1px solid var(--border-color);
-            margin: 1.5rem 0;
-        }}
-        
-        .exploit-col.yes {{ color: var(--red-alert); font-weight: bold; }}
-        .exploit-col.no {{ color: var(--text-secondary); }}
-        
-        .trend-up {{ color: var(--red-alert); font-weight: bold; }}
-        .trend-down {{ color: var(--green-ok); font-weight: bold; }}
-        .trend-stable {{ color: var(--text-secondary); }}
-        
-        /* Audio Player fixed footer */
-        .audio-player-footer {{
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #0b0c12;
-            border-top: 1px solid var(--border-color);
-            padding: 0.75rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1.5rem;
-            z-index: 100;
+
+        /* ─── Audio player ────────────────────────────────── */
+        .audio-bar {{
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(10,11,16,0.95);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border);
+            padding: 10px 20px;
+            display: flex; align-items: center; gap: 14px;
             transform: translateY(100%);
-            transition: transform 0.3s ease-in-out;
+            transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+            z-index: 200;
         }}
-        
-        .audio-player-footer.visible {{
-            transform: translateY(0);
+
+        .audio-bar.visible {{ transform: translateY(0); }}
+
+        .audio-label {{
+            font-size: 0.78rem; font-weight: 600;
+            color: var(--green); white-space: nowrap;
         }}
-        
-        .audio-player-label {{
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--accent-emerald);
-            letter-spacing: 0.5px;
-        }}
-        
-        .audio-player-footer audio {{
-            flex-grow: 1;
-            max-width: 500px;
-            height: 32px;
-        }}
-        
+
+        .audio-bar audio {{ flex: 1; max-width: 480px; height: 28px; }}
+
         .btn-close-audio {{
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: color 0.2s;
+            background: transparent; border: none;
+            color: var(--text-muted); cursor: pointer; font-size: 1rem;
+            padding: 4px; transition: color 0.15s;
         }}
-        
-        .btn-close-audio:hover {{
-            color: var(--text-primary);
+
+        .btn-close-audio:hover {{ color: var(--text); }}
+
+        /* ─── Utility ─────────────────────────────────────── */
+        .hidden {{ display: none !important; }}
+
+        /* ═══════════════════════════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════════════════════════ */
+        @media (max-width: 900px) {{
+            .metrics-grid {{ grid-template-columns: repeat(2, 1fr); }}
         }}
+
+        @media (max-width: 680px) {{
+            .sidebar {{
+                position: fixed; top: 0; left: 0; bottom: 0;
+                transform: translateX(-100%);
+                z-index: 50;
+            }}
+            .sidebar.open {{ transform: translateX(0); }}
+            .btn-hamburger {{ display: flex; }}
+            .suggestion-grid {{ grid-template-columns: 1fr; }}
+            .metrics-grid {{ grid-template-columns: repeat(2, 1fr); }}
+            .chat-welcome h1 {{ font-size: 1.55rem; }}
+            .msg-row.bot .msg-inner, .msg-row.user .msg-inner {{ max-width: 92%; }}
+        }}
+
+        @media (max-width: 480px) {{
+            .metrics-grid {{ grid-template-columns: 1fr 1fr; }}
+            .dash-table th:nth-child(n+5):not(:last-child) {{ display: none; }}
+            .dash-table td:nth-child(n+5):not(:last-child) {{ display: none; }}
+        }}
+
+        /* ─── Scrollbar geral ─────────────────────────────── */
+        ::-webkit-scrollbar {{ width: 4px; }}
+        ::-webkit-scrollbar-track {{ background: transparent; }}
+        ::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 2px; }}
+
+        /* ─── Focus visible ───────────────────────────────── */
+        :focus-visible {{ outline: 2px solid rgba(16,185,129,0.5); outline-offset: 2px; }}
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Top bar with brand label -->
-        <header class="top-bar">
-            <div class="top-bar-left">
-                <span class="logo-text">Sentinel SecOps</span>
+
+    <!-- ══════════════════════════════════════════════════════
+         SIDEBAR
+    ══════════════════════════════════════════════════════ -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Logo -->
+        <div class="sidebar-logo">
+            <div class="sidebar-logo-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             </div>
-            <div class="top-bar-right">
-                <span class="workspace-tag">Workspace</span>
+            <div>
+                <div class="sidebar-logo-text">Sentinel SecOps</div>
+                <div class="sidebar-logo-sub">Pedroxious Lab</div>
+            </div>
+        </div>
+
+        <!-- New chat -->
+        <button class="sidebar-btn-new" onclick="resetChat()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nova Consulta
+        </button>
+
+        <!-- Nav -->
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">Plataforma</div>
+            <button class="sidebar-btn active" onclick="scrollToChat()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Aeris SOC Assistant
+            </button>
+            <button class="sidebar-btn" onclick="scrollToDashboard()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Threat Dashboard
+            </button>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-section-label">Outputs</div>
+            <a class="sidebar-btn" href="pdf_reports/" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Relatórios PDF
+            </a>
+            <a class="sidebar-btn" href="feed.xml" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+                RSS Feed
+            </a>
+            <a class="sidebar-btn" href="output/" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                STIX Export
+            </a>
+        </div>
+
+        <!-- Histórico de sessões decorativo -->
+        <div class="sidebar-section" style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
+            <div class="sidebar-section-label">Histórico recente</div>
+            <div class="sidebar-history" id="session-history">
+                <div class="history-item">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Hoje
+                </div>
+                <!-- histórico dinâmico injetado por JS -->
+            </div>
+        </div>
+
+        <!-- Footer usuário -->
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">PL</div>
+                <div class="sidebar-user-info">
+                    <span class="sidebar-user-name">Pedroxious Lab</span>
+                    <span class="sidebar-user-role">Analyst · Workspace</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ══════════════════════════════════════════════════════
+         MAIN
+    ══════════════════════════════════════════════════════ -->
+    <div class="main" id="main">
+
+        <!-- Top bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="btn-hamburger" id="btn-hamburger" onclick="toggleSidebar()" aria-label="Abrir menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+                <span class="topbar-title">Aeris — SOC Intelligence Assistant</span>
+            </div>
+            <div class="topbar-right">
+                <div class="status-dot"></div>
+                <span class="topbar-badge">Online</span>
             </div>
         </header>
-        
-        <!-- Main Content Area -->
-        <!-- 1. Chat Workspace Container (Placed first as user requested) -->
-        <section class="chat-container-layout">
-            <!-- Welcome message header -->
-            <div id="chat-welcome" class="chat-welcome-container">
-                <h2>Como posso ajudar?</h2>
-                <p>Analise novas ameaças cibernéticas com suporte do SOC Assistant.</p>
-            </div>
-            
-            <!-- Scrollable chat bubble box -->
-            <div id="chat-box" class="chat-history-list empty">
-                <!-- Dynamic conversation messages injected here -->
-            </div>
-            
-            <!-- Loading spinner indicators -->
-            <div id="loading-indicator" class="chat-loading hidden" style="margin-bottom: 0.85rem; margin-left: 1rem;">
-                <div class="spinner"></div>
-                <span>Analisando contexto técnico...</span>
-            </div>
-            
-            <!-- Wide Pill Form Input -->
-            <form id="chat-form" onsubmit="handleChatSubmit(event)">
-                <div class="chat-input-wrapper">
-                    <textarea id="chat-input" placeholder="Peça ao SOC Assistant..."></textarea>
-                    <div class="chat-input-actions">
-                        <span class="chat-model-badge">Pedroxious Lab</span>
-                        <button type="submit" id="btn-send-chat" class="btn-send-pill">➔</button>
+
+        <!-- Scrollable content -->
+        <div class="content-scroll" id="content-scroll">
+
+            <!-- ══ CHAT SECTION ══════════════════════════════ -->
+            <section class="chat-section" id="chat-section">
+
+                <!-- Welcome screen (hidden when chat starts) -->
+                <div class="chat-welcome" id="chat-welcome">
+                    <div class="aeris-orb">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <h1>Como posso ajudar?</h1>
+                    <p>Analise ameaças cibernéticas, CVEs e exploits com suporte da Aeris — a IA da Pedroxious Lab.</p>
+
+                    <div class="suggestion-grid">
+                        <button class="chip" onclick="applySuggestion('Qual a ameaça mais crítica monitorada hoje?')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 7 13.5 15.5 8.5 10.5 1 17"/><polyline points="17 7 23 7 23 13"/></svg>
+                            Ameaça mais crítica hoje
+                        </button>
+                        <button class="chip" onclick="applySuggestion('Quais CVEs afetam meu tech stack atual?')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            CVEs no meu tech stack
+                        </button>
+                        <button class="chip" onclick="applySuggestion('Explique o que é uma CVE com exploit público e qual o risco.')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                            O que é exploit público?
+                        </button>
+                        <button class="chip" onclick="applySuggestion('O que significa a tática MITRE T1190?')">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                            Explicar MITRE T1190
+                        </button>
                     </div>
                 </div>
-            </form>
-            
-            <span id="chat-quota-label" style="display: block; text-align: center; margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-secondary)">Carregando cota diária...</span>
-        </section>
-        
-        <!-- 2. Threat Intelligence Monitoring Dashboard (Placed below) -->
-        <section class="dashboard-section" id="threat-dashboard-section">
-            <div class="dashboard-section-header">
-                <h2>Painel de Monitoramento Threat Intelligence</h2>
-                <div class="dashboard-section-meta">
-                    Relatório diário: <strong>Report_{date_str}_{hour_str.replace(':', '-')}.pdf</strong>
-                </div>
-            </div>
-            
-            <!-- Metrics Cards Grid -->
-            <div class="db-metrics-grid">
-                <div class="db-metric-card" style="border-top: 3px solid var(--red-alert);">
-                    <h4>CVEs Críticas Hoje</h4>
-                    <div class="db-metric-value">{critical_today}</div>
-                </div>
-                <div class="db-metric-card" style="border-top: 3px solid var(--accent-purple);">
-                    <h4>Ransomware Linked</h4>
-                    <div class="db-metric-value">{ransomware_linked}</div>
-                </div>
-                <div class="db-metric-card" style="border-top: 3px solid var(--yellow-warning);">
-                    <h4>Com Exploit Público</h4>
-                    <div class="db-metric-value">{has_exploit}</div>
-                </div>
-                <div class="db-metric-card" style="border-top: 3px solid var(--accent-cyan);">
-                    <h4>SLA Vencendo em 24h</h4>
-                    <div class="db-metric-value">{sla_24h}</div>
-                </div>
-            </div>
-            
-            <!-- Highlighted Threat of the Week -->
-            {threat_of_week_html}
-            
-            <!-- Main Dashboard table container -->
-            <div class="db-table-wrapper">
-                <table class="db-table" id="vulnerabilities-table">
-                    <thead>
-                        <tr>
-                            <th>CVE ID</th>
-                            <th>Software Afetado</th>
-                            <th>Prioridade</th>
-                            <th>Tática MITRE</th>
-                            <th>SLA Label</th>
-                            <th>Exploit DB</th>
-                            <th>Score Trend</th>
-                            <th>Ransomware</th>
-                            <th>Detalhes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {table_rows}
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </div>
 
-    <!-- Hidden audio briefing bar at bottom footer (only triggered when audio requested) -->
-    <div class="audio-player-footer" id="audio-footer">
-        <span class="audio-player-label">Cyber Briefing Audio</span>
+                <!-- Messages -->
+                <div class="chat-messages" id="chat-messages"></div>
+
+                <!-- Input area -->
+                <div class="chat-input-area">
+                    <div id="chat-error" class="chat-error hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span id="chat-error-msg"></span>
+                    </div>
+
+                    <form id="chat-form" onsubmit="handleSubmit(event)">
+                        <div class="input-pill">
+                            <textarea
+                                id="chat-input"
+                                placeholder="Pergunte sobre CVEs, exploits, MITRE ATT&CK..."
+                                rows="1"
+                                aria-label="Mensagem para Aeris"
+                            ></textarea>
+                            <div class="input-pill-meta">
+                                <span class="input-workspace-tag">Pedroxious Lab</span>
+                                <button type="submit" id="btn-send" class="btn-send" aria-label="Enviar">
+                                    <svg id="send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                    <div class="btn-spinner hidden" id="btn-spinner"></div>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="input-footer">
+                        <span class="quota-text" id="quota-label">Carregando cota...</span>
+                    </div>
+                </div>
+
+                <!-- Scroll cue -->
+                <div class="scroll-cue" onclick="scrollToDashboard()" title="Ver painel de ameaças">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                    Threat Dashboard
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+
+            </section><!-- /chat-section -->
+
+            <!-- ══ DASHBOARD SECTION ═════════════════════════ -->
+            <section class="dashboard-section" id="dashboard-section">
+
+                <div class="dash-header">
+                    <div class="dash-header-left">
+                        <div>
+                            <div class="dash-title">Painel de Threat Intelligence</div>
+                            <div class="dash-subtitle" id="dash-subtitle">Atualizado em: {date_str} às {hour_str}</div>
+                        </div>
+                        <div class="dash-live-badge">
+                            <div class="status-dot"></div>
+                            Ao vivo
+                        </div>
+                    </div>
+                    <a class="dash-pdf-link" href="pdf_reports/" target="_blank">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        Relatório PDF
+                    </a>
+                </div>
+
+                <!-- Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card red">
+                        <div class="metric-label">CVEs Críticas Hoje</div>
+                        <div class="metric-value" id="m-critical">{critical_today}</div>
+                        <div class="metric-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        </div>
+                    </div>
+                    <div class="metric-card purple">
+                        <div class="metric-label">Ransomware Linked</div>
+                        <div class="metric-value" id="m-ransomware">{ransomware_linked}</div>
+                        <div class="metric-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                        </div>
+                    </div>
+                    <div class="metric-card yellow">
+                        <div class="metric-label">Com Exploit Público</div>
+                        <div class="metric-value" id="m-exploit">{has_exploit}</div>
+                        <div class="metric-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                        </div>
+                    </div>
+                    <div class="metric-card cyan">
+                        <div class="metric-label">SLA Vencendo 24h</div>
+                        <div class="metric-value" id="m-sla">{sla_24h}</div>
+                        <div class="metric-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Threat of the week (injected by Python or hidden) -->
+                {threat_of_week_html}
+
+                <!-- CVE Table -->
+                <div class="table-wrapper">
+                    <table class="dash-table" id="cve-table">
+                        <thead>
+                            <tr>
+                                <th>CVE ID</th>
+                                <th>Software Afetado</th>
+                                <th>Score</th>
+                                <th>Tática MITRE</th>
+                                <th>SLA</th>
+                                <th>Exploit DB</th>
+                                <th>Tendência</th>
+                                <th>Ransomware</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cve-tbody">
+                            {table_rows}
+                        </tbody>
+                    </table>
+                </div>
+
+            </section><!-- /dashboard-section -->
+
+        </div><!-- /content-scroll -->
+    </div><!-- /main -->
+
+    <!-- Audio bar -->
+    <div class="audio-bar" id="audio-bar">
+        <span class="audio-label">⚡ Cyber Briefing</span>
         <audio controls id="briefing-audio">
             <source src="reports/audio/latest.mp3" type="audio/mpeg">
-            Seu navegador não suporta player de áudio.
         </audio>
-        <button class="btn-close-audio" onclick="closeAudioPlayer()">✕</button>
+        <button class="btn-close-audio" onclick="closeAudio()">✕</button>
     </div>
 
+    <!-- Sidebar overlay (mobile) -->
+    <div id="sidebar-overlay" onclick="closeSidebar()"
+         style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:40;"></div>
+
     <script>
-        // Toggle CVE details row expand
-        function showDetail(id) {{
-            const row = document.getElementById('detail-' + id);
-            row.classList.toggle('hidden');
+    /* ═══════════════════════════════════════════════════════════
+       CONFIGURATION
+    ═══════════════════════════════════════════════════════════ */
+    let API_KEY = atob("{api_key_b64}");          // Base64-encoded Gemini API key injected by scraper.py
+    if (!API_KEY) {{
+        API_KEY = localStorage.getItem("GEMINI_API_KEY") || "";
+    }}
+    const MAX_QUOTA = 20;
+    const GEMINI_MODEL = "gemini-3.5-flash";
+
+    const AERIS_SYSTEM_PROMPT = `{chat_system_context}`;
+
+    const AERIS_PRESET_MESSAGE = `Olá, sou **Aeris**, assistente de IA da Pedroxious Lab para a plataforma Sentinel SecOps. Estou aqui para ajudar você a analisar ameaças cibernéticas, CVEs e exploits.
+
+Como posso auxiliar na segurança hoje?`;
+
+    /* ═══════════════════════════════════════════════════════════
+       STATE
+    ═══════════════════════════════════════════════════════════ */
+    let conversationHistory = [];
+    let chatStarted = false;
+    let sessionMessages = [];    // for sidebar history
+
+    /* ═══════════════════════════════════════════════════════════
+       INIT
+    ═══════════════════════════════════════════════════════════ */
+    document.addEventListener("DOMContentLoaded", () => {{
+        checkQuota();
+        injectPresetMessage();
+        setupTextarea();
+    }});
+
+    function injectPresetMessage() {{
+        // Inject the visual preset bot message (not part of API history)
+        const messagesEl = document.getElementById("chat-messages");
+        const row = buildBotRow(AERIS_PRESET_MESSAGE, true);
+        messagesEl.appendChild(row);
+        // Add preset to history so Aeris has context of her own greeting
+        conversationHistory.push({{
+            role: "model",
+            parts: [{{ text: "Olá, sou Aeris, assistente de IA da Pedroxious Lab para a plataforma Sentinel SecOps. Estou aqui para ajudar você a analisar ameaças cibernéticas, CVEs e exploits. Como posso auxiliar na segurança hoje?" }}]
+        }});
+    }}
+
+    /* ═══════════════════════════════════════════════════════════
+       SIDEBAR / NAVIGATION
+    ═══════════════════════════════════════════════════════════ */
+    function toggleSidebar() {{
+        const sb = document.getElementById("sidebar");
+        const ov = document.getElementById("sidebar-overlay");
+        const open = sb.classList.contains("open");
+        sb.classList.toggle("open", !open);
+        ov.style.display = open ? "none" : "block";
+    }}
+
+    function closeSidebar() {{
+        document.getElementById("sidebar").classList.remove("open");
+        document.getElementById("sidebar-overlay").style.display = "none";
+    }}
+
+    function scrollToChat() {{
+        document.getElementById("content-scroll").scrollTo({{ top: 0, behavior: "smooth" }});
+        closeSidebar();
+    }}
+
+    function scrollToDashboard() {{
+        document.getElementById("dashboard-section").scrollIntoView({{ behavior: "smooth" }});
+        closeSidebar();
+    }}
+
+    /* ═══════════════════════════════════════════════════════════
+       QUOTA
+    ═══════════════════════════════════════════════════════════ */
+    function checkQuota() {{
+        const today = new Date().toISOString().slice(0, 10);
+        let usage = JSON.parse(localStorage.getItem("sentinel_quota") || "null");
+        if (!usage || usage.date !== today) usage = {{ date: today, count: 0 }};
+        localStorage.setItem("sentinel_quota", JSON.stringify(usage));
+
+        const label = document.getElementById("quota-label");
+        const remaining = MAX_QUOTA - usage.count;
+
+        if (usage.count >= MAX_QUOTA) {{
+            document.getElementById("chat-input").disabled = true;
+            document.getElementById("chat-input").placeholder = "Consultas esgotadas por hoje.";
+            document.getElementById("btn-send").disabled = true;
+            label.innerHTML = `<span class="quota-warn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Limite diário atingido — renova à meia-noite</span>`;
+            return false;
         }}
 
-        function closeAudioPlayer() {{
-            const player = document.getElementById('briefing-audio');
-            player.pause();
-            document.getElementById('audio-footer').classList.remove('visible');
+        label.textContent = `${{remaining}} de ${{MAX_QUOTA}} consultas disponíveis hoje`;
+        return true;
+    }}
+
+    function incrementQuota() {{
+        const today = new Date().toISOString().slice(0, 10);
+        let usage = JSON.parse(localStorage.getItem("sentinel_quota") || "null");
+        if (!usage || usage.date !== today) usage = {{ date: today, count: 0 }};
+        usage.count += 1;
+        localStorage.setItem("sentinel_quota", JSON.stringify(usage));
+        checkQuota();
+    }}
+
+    /* ═══════════════════════════════════════════════════════════
+       CHAT SUBMIT
+    ═══════════════════════════════════════════════════════════ */
+    async function handleSubmit(e) {{
+        e.preventDefault();
+        const input = document.getElementById("chat-input");
+        const message = input.value.trim();
+        if (!message) return;
+
+        if (!API_KEY) {{
+            const userKey = prompt("Por favor, insira sua chave de API do Gemini para continuar:");
+            if (!userKey || !userKey.trim()) {{
+                showError("Chave de API do Gemini é necessária para usar o chat.");
+                return;
+            }}
+            API_KEY = userKey.trim();
+            localStorage.setItem("GEMINI_API_KEY", API_KEY);
         }}
 
-        // Trigger Submit on Enter (Without Shift)
-        document.getElementById('chat-input').addEventListener('keydown', function(event) {{
-            if (event.key === 'Enter' && !event.shiftKey) {{
-                event.preventDefault();
-                document.getElementById('chat-form').requestSubmit();
+        if (!checkQuota()) return;
+
+        // First real message: hide welcome, show messages
+        if (!chatStarted) {{
+            document.getElementById("chat-welcome").classList.add("hidden");
+            document.getElementById("chat-messages").classList.add("visible");
+            chatStarted = true;
+        }}
+
+        appendUserBubble(message);
+        input.value = "";
+        input.style.height = "auto";
+
+        // Audio keyword check
+        checkAudioKeywords(message);
+
+        // Add to sidebar history
+        addToSidebarHistory(message);
+
+        showError(null);
+        setLoading(true);
+
+        conversationHistory.push({{ role: "user", parts: [{{ text: message }}] }});
+
+        try {{
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${{GEMINI_MODEL}}:generateContent?key=${{API_KEY}}`;
+            const res = await fetch(url, {{
+                method: "POST",
+                headers: {{ "Content-Type": "application/json" }},
+                body: JSON.stringify({{
+                    contents: conversationHistory,
+                    systemInstruction: {{ parts: [{{ text: AERIS_SYSTEM_PROMPT }}] }},
+                    generationConfig: {{ temperature: 0.7, maxOutputTokens: 1024 }}
+                }})
+            }});
+
+            if (!res.ok) throw new Error(`API error: ${{res.status}} ${{res.statusText}}`);
+
+            const data = await res.json();
+            const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!reply) throw new Error("Resposta vazia da API.");
+
+            appendBotBubble(reply);
+            conversationHistory.push({{ role: "model", parts: [{{ text: reply }}] }});
+            incrementQuota();
+
+        }} catch (err) {{
+            console.error("Aeris API Error:", err);
+            showError("Aeris não conseguiu responder no momento. Verifique a chave de API ou tente novamente.");
+        }} finally {{
+            setLoading(false);
+        }}
+    }}
+
+    /* ═══════════════════════════════════════════════════════════
+       BUBBLE BUILDERS
+    ═══════════════════════════════════════════════════════════ */
+    function timeNow() {{
+        return new Date().toLocaleTimeString("pt-BR", {{ hour: "2-digit", minute: "2-digit" }});
+    }}
+
+    function appendUserBubble(text) {{
+        const messages = document.getElementById("chat-messages");
+        const row = document.createElement("div");
+        row.className = "msg-row user";
+        row.innerHTML = `
+            <div class="msg-inner">
+                <div>
+                    <div class="bubble user-bubble">${{escHtml(text)}}</div>
+                    <div class="msg-meta" style="text-align:right;">${{timeNow()}} · Você</div>
+                </div>
+            </div>`;
+        messages.appendChild(row);
+        scrollMessages();
+    }}
+
+    function appendBotBubble(text) {{
+        const messages = document.getElementById("chat-messages");
+        const row = buildBotRow(text, false);
+        messages.appendChild(row);
+        scrollMessages();
+    }}
+
+    function buildBotRow(text, isPreset) {{
+        const row = document.createElement("div");
+        row.className = "msg-row bot";
+        const formatted = formatMarkdown(text);
+        row.innerHTML = `
+            <div class="msg-inner">
+                <div class="bot-av" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div>
+                    <div class="bubble bot-bubble">${{formatted}}</div>
+                    <div class="msg-meta">
+                        ${{isPreset ? "Aeris · Pedroxious Lab" : timeNow() + " · Aeris"}}
+                    </div>
+                </div>
+            </div>`;
+        return row;
+    }}
+
+    function formatMarkdown(text) {{
+        return text
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+            .replace(/\*(.*?)\*/g, "<em>$1</em>")
+            .replace(/`([^`]+)`/g, "<code style='font-family:JetBrains Mono,monospace;font-size:0.82em;background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;'>$1</code>")
+            .replace(/\n/g, "<br>");
+    }}
+
+    function escHtml(t) {{
+        return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }}
+
+    function scrollMessages() {{
+        const msgs = document.getElementById("chat-messages");
+        msgs.scrollTop = msgs.scrollHeight;
+    }}
+
+    /* ═══════════════════════════════════════════════════════════
+       LOADING STATE
+    ═══════════════════════════════════════════════════════════ */
+    function setLoading(on) {{
+        const btn = document.getElementById("btn-send");
+        const icon = document.getElementById("send-icon");
+        const spinner = document.getElementById("btn-spinner");
+        const messages = document.getElementById("chat-messages");
+
+        btn.disabled = on;
+
+        if (on) {{
+            icon.classList.add("hidden");
+            spinner.classList.remove("hidden");
+
+            const typing = document.createElement("div");
+            typing.id = "typing-indicator";
+            typing.className = "typing-row";
+            typing.innerHTML = `
+                <div class="bot-av" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>`;
+            messages.appendChild(typing);
+            scrollMessages();
+        }} else {{
+            icon.classList.remove("hidden");
+            spinner.classList.add("hidden");
+            const t = document.getElementById("typing-indicator");
+            if (t) t.remove();
+        }}
+    }}
+
+    /* ═══════════════════════════════════════════════════════════
+       ERROR
+    ═══════════════════════════════════════════════════════════ */
+    function showError(msg) {{
+        const el = document.getElementById("chat-error");
+        const txt = document.getElementById("chat-error-msg");
+        if (msg) {{ txt.textContent = msg; el.classList.remove("hidden"); }}
+        else      {{ el.classList.add("hidden"); }}
+    }}
+
+    /* ═══════════════════════════════════════════════════════════
+       SUGGESTIONS & RESET
+    ═══════════════════════════════════════════════════════════ */
+    function applySuggestion(text) {{
+        document.getElementById("chat-input").value = text;
+        document.getElementById("chat-form").requestSubmit();
+    }}
+
+    function resetChat() {{
+        conversationHistory = [];
+        chatStarted = false;
+        document.getElementById("chat-messages").innerHTML = "";
+        document.getElementById("chat-messages").classList.remove("visible");
+        document.getElementById("chat-welcome").classList.remove("hidden");
+        showError(null);
+        injectPresetMessage();
+        scrollToChat();
+        closeSidebar();
+    }}
+
+    /* ═══════════════════════════════════════════════════════════
+       TEXTAREA AUTO-RESIZE
+    ═══════════════════════════════════════════════════════════ */
+    function setupTextarea() {{
+        const ta = document.getElementById("chat-input");
+        ta.addEventListener("input", function() {{
+            this.style.height = "auto";
+            this.style.height = Math.min(this.scrollHeight, 140) + "px";
+        }});
+        ta.addEventListener("keydown", function(e) {{
+            if (e.key === "Enter" && !e.shiftKey) {{
+                e.preventDefault();
+                document.getElementById("chat-form").requestSubmit();
             }}
         }});
+    }}
 
-        // Keywords detection to make the audio player visible at the bottom
-        const audioKeywords = ["audio", "áudio", "briefing", "ouvir", "tocar", "narrar", "podcast", "reproduzir", "som", "escutar"];
-        function checkAudioRequest(message) {{
-            const msgLower = message.toLowerCase();
-            const hasKeyword = audioKeywords.some(keyword => msgLower.includes(keyword));
-            if (hasKeyword) {{
-                const footer = document.getElementById('audio-footer');
-                footer.classList.add('visible');
-                // Reload audio element in case source changed
-                const player = document.getElementById('briefing-audio');
-                player.load();
-                player.play().catch(e => console.log("Auto-play blocked by browser policy"));
-            }}
+    /* ═══════════════════════════════════════════════════════════
+       AUDIO
+    ═══════════════════════════════════════════════════════════ */
+    const AUDIO_KEYWORDS = ["audio","áudio","briefing","ouvir","tocar","narrar","podcast","reproduzir","som","escutar"];
+
+    function checkAudioKeywords(msg) {{
+        if (AUDIO_KEYWORDS.some(kw => msg.toLowerCase().includes(kw))) {{
+            const bar = document.getElementById("audio-bar");
+            bar.classList.add("visible");
+            const player = document.getElementById("briefing-audio");
+            player.load();
+            player.play().catch(() => {{}});
         }}
+    }}
 
-        // Client Side Chat Control with Pedroxious Lab Model
-        // Injected Key (Note: Personal portfolio API key deployment)
-        const API_KEY = atob("{api_key_b64}"); 
-        const SYSTEM_INSTRUCTION = `{chat_system_context}`;
-        const MAX_CONVERSATIONS = 20;
+    function closeAudio() {{
+        document.getElementById("briefing-audio").pause();
+        document.getElementById("audio-bar").classList.remove("visible");
+    }}
 
-        // Message history state
-        let conversationHistory = [];
+    /* ═══════════════════════════════════════════════════════════
+       DASHBOARD: detail row toggle
+    ═══════════════════════════════════════════════════════════ */
+    function toggleDetail(id) {{
+        const row = document.getElementById("detail-" + id);
+        if (!row) return;
+        row.classList.toggle("open");
+    }}
 
-        // Check local storage limits
-        function checkQuota() {{
-            const todayStr = new Date().toISOString().slice(0, 10);
-            let usage = localStorage.getItem('sentinel_chat_usage');
-            if (usage) {{
-                usage = JSON.parse(usage);
-                if (usage.date !== todayStr) {{
-                    usage = {{ date: todayStr, count: 0 }};
-                }}
-            }} else {{
-                usage = {{ date: todayStr, count: 0 }};
-            }}
-            localStorage.setItem('sentinel_chat_usage', JSON.stringify(usage));
-            
-            const remaining = MAX_CONVERSATIONS - usage.count;
-            document.getElementById('chat-quota-label').innerText = remaining + " de " + MAX_CONVERSATIONS + " consultas disponíveis hoje";
-            
-            if (usage.count >= MAX_CONVERSATIONS) {{
-                document.getElementById('chat-input').disabled = true;
-                document.getElementById('chat-input').placeholder = "Limite de 20 consultas diárias atingido. Renova amanhã.";
-                document.getElementById('btn-send-chat').disabled = true;
-                return false;
-            }}
-            return true;
-        }}
+    /* ═══════════════════════════════════════════════════════════
+       SIDEBAR SESSION HISTORY
+    ═══════════════════════════════════════════════════════════ */
+    function addToSidebarHistory(msg) {{
+        const hist = document.getElementById("session-history");
+        const existing = hist.querySelector(".history-item:not([data-placeholder])");
+        // max 6 items
+        const items = hist.querySelectorAll(".history-item[data-msg]");
+        if (items.length >= 6) items[0].remove();
 
-        function incrementQuota() {{
-            const usage = JSON.parse(localStorage.getItem('sentinel_chat_usage'));
-            usage.count += 1;
-            localStorage.setItem('sentinel_chat_usage', JSON.stringify(usage));
-            checkQuota();
-        }}
-
-        async function handleChatSubmit(event) {{
-            event.preventDefault();
-            const inputField = document.getElementById('chat-input');
-            const message = inputField.value.trim();
-            if (!message) return;
-            
-            if (!checkQuota()) return;
-            
-            // Adjust layouts: hide welcome header & show borders
-            document.getElementById('chat-welcome').classList.add('hidden');
-            document.getElementById('chat-box').classList.remove('empty');
-            
-            // Append message to UI
-            appendBubble(message, true);
-            inputField.value = "";
-            
-            // Trigger audio check
-            checkAudioRequest(message);
-            
-            // Set loading state
-            document.getElementById('loading-indicator').classList.remove('hidden');
-            document.getElementById('btn-send-chat').disabled = true;
-            
-            // Build conversation payload
-            conversationHistory.push({{
-                role: "user",
-                parts: [{{ text: message }}]
-            }});
-            
-            try {{
-                // Request API
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${{API_KEY}}`;
-                
-                const response = await fetch(url, {{
-                    method: 'POST',
-                    headers: {{
-                        'Content-Type': 'application/json'
-                    }},
-                    body: JSON.stringify({{
-                        contents: conversationHistory,
-                        systemInstruction: {{
-                            parts: [{{ text: SYSTEM_INSTRUCTION }}]
-                        }}
-                    }})
-                }});
-                
-                if (!response.ok) {{
-                    throw new Error("Erro na API: " + response.statusText);
-                }}
-                
-                const data = await response.json();
-                const replyText = data.candidates[0].content.parts[0].text;
-                
-                appendBubble(replyText, false);
-                conversationHistory.push({{
-                    role: "model",
-                    parts: [{{ text: replyText }}]
-                }});
-                
-                incrementQuota();
-                
-            }} catch (error) {{
-                appendBubble("Desculpe, ocorreu um erro ao obter resposta do analista de IA. Tente novamente mais tarde.", false);
-                console.error("Chat Error:", error);
-            }} finally {{
-                document.getElementById('loading-indicator').classList.add('hidden');
-                document.getElementById('btn-send-chat').disabled = false;
-                checkQuota();
-            }}
-        }}
-
-        function appendBubble(text, isUser) {{
-            const chatBox = document.getElementById('chat-box');
-            const bubbleRow = document.createElement('div');
-            bubbleRow.classList.add('chat-msg-row');
-            bubbleRow.classList.add(isUser ? 'row-user' : 'row-bot');
-            
-            const bubble = document.createElement('div');
-            bubble.classList.add('bubble');
-            
-            const textNode = document.createElement('p');
-            textNode.innerText = text;
-            bubble.appendChild(textNode);
-            
-            const timeNode = document.createElement('div');
-            timeNode.classList.add('msg-meta');
-            const now = new Date();
-            timeNode.innerText = now.toLocaleTimeString([], {{hour: '2-digit', minute:'2-digit'}}) + " - " + (isUser ? "Você" : "SOC Agent");
-            bubble.appendChild(timeNode);
-            
-            bubbleRow.appendChild(bubble);
-            chatBox.appendChild(bubbleRow);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }}
-
-        // Init
-        checkQuota();
+        const item = document.createElement("div");
+        item.className = "history-item";
+        item.setAttribute("data-msg", "1");
+        item.title = msg;
+        item.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            ${{escHtml(msg.length > 28 ? msg.slice(0, 28) + "…" : msg)}}`;
+        item.onclick = () => applySuggestion(msg);
+        hist.appendChild(item);
+    }}
     </script>
+
 </body>
 </html>
 """
+
 
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(html_template)
