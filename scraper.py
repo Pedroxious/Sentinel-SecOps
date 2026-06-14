@@ -25,7 +25,7 @@ NVD_API_KEY    = os.getenv("NVD_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Using gemini-3.5-flash as principal model
-MODEL_NAME = "gemini-3.5-flash"
+MODEL_NAME = "gemini-3.1-flash"
 model = genai.GenerativeModel(MODEL_NAME)
 
 CSV_PATH = os.path.join("dashboards", "historico.csv")
