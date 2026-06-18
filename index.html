@@ -1231,7 +1231,7 @@
                     <div class="dash-header-left">
                         <div>
                             <div class="dash-title">Painel de Threat Intelligence</div>
-                            <div class="dash-subtitle" id="dash-subtitle">Atualizado em: 2026-06-17 às 19:07</div>
+                            <div class="dash-subtitle" id="dash-subtitle">Atualizado em: 2026-06-17 às 23:09</div>
                         </div>
                         <div class="dash-live-badge">
                             <div class="status-dot"></div>
@@ -1331,7 +1331,7 @@
     const GEMINI_MODEL = "gemini-3.1-flash";
 
     const AERIS_SYSTEM_PROMPT = `Você é o SOC Assistant do Sentinel-SecOps, um analista virtual de segurança cibernética integrado ao dashboard de Threat Intelligence.
-CONTEÚDO DO PAINEL ATUAL (gerado em 2026-06-17 19:07):
+CONTEÚDO DO PAINEL ATUAL (gerado em 2026-06-17 23:09):
 - Total de CVEs monitoradas hoje: 0
 - CVEs críticas (score >= 9.0): 0
 - CVEs com ransomware associado: 0
@@ -1561,15 +1561,14 @@ Como posso auxiliar na segurança hoje?`;
     }
 
     function formatMarkdown(text) {
-    return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-        .replace(/\*(.*?)\*/g, "<em>$1</em>")
-        .replace(/`([^`]+)`/g, "<code style='font-family:JetBrains Mono,monospace;font-size:0.82em;background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;'>$1</code>")
-        .replace(/\n/g, "<br>");
-}
+        return text
+            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+            .replace(/\*(.*?)\*/g, "<em>$1</em>")
+            .replace(/`([^`]+)`/g, "<code style='font-family:JetBrains Mono,monospace;font-size:0.82em;background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;'>$1</code>")
+            .replace(/
+/g, "<br>");
+    }
 
     function escHtml(t) {
         return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
