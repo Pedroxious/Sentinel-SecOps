@@ -17,13 +17,13 @@ The analysis is enhanced by AI models from Pedroxious Lab to provide structured 
 ## Current Network Status
 
 <!-- STATUS_START -->
-**Last Update:** 2026-07-21 07:21 (BRT)
+**Last Update:** 2026-07-21 12:30 (BRT)
 
 **Network Status:** ATTENTION
 
 **Critical CVEs Today:** 0
 
-**[Download Latest PDF Report](pdf_reports/Report_2026-07-21_07-21.pdf)**
+**[Download Latest PDF Report](pdf_reports/Report_2026-07-21_12-30.pdf)**
 
 **[View Minimal HTML Dashboard](index.html)**
 
