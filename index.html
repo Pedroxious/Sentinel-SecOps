@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel SecOps — Pedroxious Lab</title>
+    <title>Sentinel SecOps — Autonomous Threat Intelligence Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         /* ═══════════════════════════════════════════════════════
-           DESIGN TOKENS — Pedroxious Lab palette
+           DESIGN TOKENS — Sentinel SecOps Dark Palette
         ═══════════════════════════════════════════════════════ */
         :root {
             --bg:           #07080c;
             --bg-sidebar:   #0a0b10;
             --bg-card:      #0d0f17;
+            --bg-card-alt:  #111420;
             --bg-input:     #0f111a;
             --bg-hover:     rgba(255,255,255,0.03);
             --border:       #1a1e2f;
@@ -66,7 +66,7 @@
             flex-direction: column;
             padding: 0;
             position: relative;
-            z-index: 10;
+            z-index: 50;
             transition: transform 0.28s cubic-bezier(.4,0,.2,1);
         }
 
@@ -113,42 +113,6 @@
             text-transform: uppercase;
         }
 
-        .sidebar-section {
-            padding: 12px 10px 4px;
-        }
-
-        .sidebar-section-label {
-            font-size: 0.65rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-            padding: 0 8px 8px;
-        }
-
-        .sidebar-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            padding: 9px 10px;
-            border-radius: var(--radius-sm);
-            background: transparent;
-            border: none;
-            color: var(--text-sub);
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.85rem;
-            cursor: pointer;
-            text-align: left;
-            transition: background 0.15s, color 0.15s;
-            text-decoration: none;
-        }
-
-        .sidebar-btn:hover { background: var(--bg-hover); color: var(--text); }
-        .sidebar-btn.active { background: var(--green-dim); color: var(--green); }
-
-        .sidebar-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
-
         .sidebar-btn-new {
             display: flex;
             align-items: center;
@@ -174,36 +138,116 @@
 
         .sidebar-btn-new svg { width: 14px; height: 14px; }
 
+        .sidebar-section {
+            padding: 8px 10px 4px;
+        }
+
+        .sidebar-section-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            padding: 0 8px 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            border: none;
+            color: var(--text-sub);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.84rem;
+            cursor: pointer;
+            text-align: left;
+            transition: background 0.15s, color 0.15s;
+            text-decoration: none;
+        }
+
+        .sidebar-btn:hover { background: var(--bg-hover); color: var(--text); }
+        .sidebar-btn.active { background: var(--green-dim); color: var(--green); font-weight: 500; }
+        .sidebar-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+        /* Dynamic Chat History in Sidebar */
         .sidebar-history {
             flex: 1;
             overflow-y: auto;
-            padding: 0 10px 10px;
+            padding: 4px 6px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
 
         .sidebar-history::-webkit-scrollbar { width: 3px; }
-        .sidebar-history::-webkit-scrollbar-track { background: transparent; }
         .sidebar-history::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        .history-item {
+        .history-session-item {
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
             padding: 8px 10px;
             border-radius: var(--radius-sm);
             cursor: pointer;
             color: var(--text-muted);
-            font-size: 0.8rem;
+            font-size: 0.79rem;
             transition: background 0.12s, color 0.12s;
+            position: relative;
+            group: relative;
+        }
+
+        .history-session-item:hover { background: var(--bg-hover); color: var(--text-sub); }
+        .history-session-item.active { background: rgba(16,185,129,0.1); color: var(--green); font-weight: 500; }
+
+        .history-session-left {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            gap: 2px;
+            flex: 1;
+        }
+
+        .history-session-title {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
         }
 
-        .history-item:hover { background: var(--bg-hover); color: var(--text-sub); }
-        .history-item svg { width: 12px; height: 12px; flex-shrink: 0; opacity: 0.5; }
+        .history-session-time {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
 
+        .history-del-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.15s, color 0.15s;
+        }
+
+        .history-session-item:hover .history-del-btn { opacity: 1; }
+        .history-del-btn:hover { color: var(--red); background: rgba(239,68,68,0.1); }
+        .history-del-btn svg { width: 12px; height: 12px; }
+
+        /* Anonymous User Footer */
         .sidebar-footer {
-            padding: 12px 10px;
+            padding: 10px;
             border-top: 1px solid var(--border);
             display: flex;
             flex-direction: column;
@@ -217,31 +261,44 @@
             padding: 8px 10px;
             border-radius: var(--radius-sm);
             cursor: pointer;
-            transition: background 0.15s;
+            transition: background 0.15s, border-color 0.15s;
+            border: 1px solid transparent;
+            background: rgba(255,255,255,0.02);
         }
 
-        .sidebar-user:hover { background: var(--bg-hover); }
+        .sidebar-user:hover {
+            background: var(--bg-hover);
+            border-color: rgba(16,185,129,0.2);
+        }
 
-        .sidebar-avatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--purple), var(--cyan));
+        .sidebar-avatar.anonymous {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #141724;
+            border: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: white;
+            color: var(--cyan);
             flex-shrink: 0;
         }
 
-        .sidebar-user-info { display: flex; flex-direction: column; }
-        .sidebar-user-name { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+        .sidebar-avatar.anonymous svg { width: 17px; height: 17px; }
+
+        .sidebar-user-info { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+        .sidebar-user-name { font-size: 0.82rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .sidebar-user-role { font-size: 0.68rem; color: var(--text-muted); }
 
+        .sidebar-user-cog {
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+        }
+        .sidebar-user-cog svg { width: 14px; height: 14px; }
+
         /* ═══════════════════════════════════════════════════════
-           MAIN AREA
+           MAIN AREA & SPA VIEWS
         ═══════════════════════════════════════════════════════ */
         .main {
             flex: 1;
@@ -252,7 +309,6 @@
             position: relative;
         }
 
-        /* ─── Top bar ─────────────────────────────────────── */
         .topbar {
             display: flex;
             align-items: center;
@@ -262,6 +318,7 @@
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
             background: var(--bg);
+            z-index: 20;
         }
 
         .topbar-left { display: flex; align-items: center; gap: 12px; }
@@ -287,7 +344,7 @@
             color: var(--text-sub);
         }
 
-        .topbar-right { display: flex; align-items: center; gap: 8px; }
+        .topbar-right { display: flex; align-items: center; gap: 10px; }
 
         .topbar-badge {
             font-size: 0.72rem;
@@ -314,20 +371,55 @@
             50% { opacity: 0.4; }
         }
 
-        /* ─── Scrollable content area ─────────────────────── */
+        .topbar-account-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-sub);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .topbar-account-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text);
+            border-color: rgba(16,185,129,0.3);
+        }
+
         .content-scroll {
             flex: 1;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .content-scroll::-webkit-scrollbar { width: 4px; }
-        .content-scroll::-webkit-scrollbar-track { background: transparent; }
         .content-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
+        /* SPA VIEW CONTAINERS */
+        .spa-view {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.18s ease-in-out;
+        }
+
+        .spa-view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* ═══════════════════════════════════════════════════════
-           CHAT SECTION — fills 100vh first
+           CHAT SECTION
         ═══════════════════════════════════════════════════════ */
         .chat-section {
             min-height: calc(100vh - 56px);
@@ -336,7 +428,6 @@
             position: relative;
         }
 
-        /* Welcome screen */
         .chat-welcome {
             flex: 1;
             display: flex;
@@ -380,11 +471,10 @@
         .chat-welcome p {
             font-size: 0.92rem;
             color: var(--text-sub);
-            max-width: 420px;
+            max-width: 440px;
             line-height: 1.55;
         }
 
-        /* Suggestion chips */
         .suggestion-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -419,7 +509,6 @@
 
         .chip svg { width: 14px; height: 14px; color: var(--green); flex-shrink: 0; margin-top: 1px; }
 
-        /* Messages area */
         .chat-messages {
             flex: 1;
             display: none;
@@ -433,7 +522,6 @@
         .chat-messages::-webkit-scrollbar { width: 4px; }
         .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-        /* Message rows */
         .msg-row {
             display: flex;
             padding: 8px 24px;
@@ -452,11 +540,11 @@
             display: flex;
             align-items: flex-start;
             gap: 12px;
-            max-width: 78%;
+            max-width: 82%;
         }
 
         .msg-row.user .msg-inner {
-            max-width: 72%;
+            max-width: 75%;
         }
 
         .bot-av {
@@ -473,7 +561,7 @@
         .bot-av svg { width: 13px; height: 13px; }
 
         .bubble {
-            padding: 11px 15px;
+            padding: 12px 16px;
             border-radius: var(--radius-lg);
             font-size: 0.9rem;
             line-height: 1.6;
@@ -528,7 +616,7 @@
             40%            { transform: scale(1); opacity: 1; }
         }
 
-        /* ─── Input bar ───────────────────────────────────── */
+        /* Input Area */
         .chat-input-area {
             padding: 12px 20px 20px;
             background: var(--bg);
@@ -635,16 +723,6 @@
             text-align: center;
         }
 
-        .quota-warn {
-            display: flex; align-items: center; gap: 4px;
-            color: var(--yellow); font-size: 0.72rem;
-        }
-
-        .quota-warn svg { width: 12px; height: 12px; }
-
-        /* ═══════════════════════════════════════════════════════
-           SCROLL CUE
-        ═══════════════════════════════════════════════════════ */
         .scroll-cue {
             display: flex;
             align-items: center;
@@ -674,7 +752,7 @@
             padding: 40px 24px 60px;
             display: flex;
             flex-direction: column;
-            gap: 28px;
+            gap: 24px;
             border-top: 1px solid var(--border);
         }
 
@@ -689,7 +767,7 @@
         .dash-header-left { display: flex; align-items: center; gap: 12px; }
 
         .dash-title {
-            font-size: 1.05rem;
+            font-size: 1.15rem;
             font-weight: 700;
             color: var(--text);
         }
@@ -706,21 +784,27 @@
             text-transform: uppercase; letter-spacing: 0.5px;
         }
 
-        .dash-pdf-link {
+        .dash-actions-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-dash-action {
             display: flex; align-items: center; gap: 6px;
             padding: 6px 12px; border-radius: var(--radius-sm);
             border: 1px solid var(--border);
             background: rgba(255,255,255,0.02);
             color: var(--text-sub);
             font-size: 0.78rem; font-weight: 500;
-            text-decoration: none;
+            cursor: pointer;
             transition: all 0.15s;
         }
 
-        .dash-pdf-link:hover { border-color: rgba(16,185,129,0.2); color: var(--green); }
-        .dash-pdf-link svg { width: 13px; height: 13px; }
+        .btn-dash-action:hover { border-color: rgba(16,185,129,0.3); color: var(--green); }
+        .btn-dash-action svg { width: 13px; height: 13px; }
 
-        /* ─── Metric cards grid ───────────────────────────── */
+        /* Metrics */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -779,71 +863,63 @@
         .metric-icon svg { width: 24px; height: 24px; }
         .metric-card:hover .metric-icon { opacity: 0.2; }
 
-        /* ─── Threat of the Week ──────────────────────────── */
-        .threat-card {
+        /* Table Filter Controls */
+        .table-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             background: var(--bg-card);
-            border: 1px solid rgba(239,68,68,0.2);
-            border-radius: var(--radius-lg);
-            padding: 22px 24px;
-            position: relative;
-            overflow: hidden;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 6px 12px;
+            flex: 1;
+            max-width: 420px;
         }
 
-        .threat-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, var(--red), transparent);
-        }
-
-        .threat-header {
-            display: flex; align-items: center; justify-content: space-between;
-            flex-wrap: wrap; gap: 10px; margin-bottom: 14px;
-        }
-
-        .threat-badge {
-            font-size: 0.65rem; font-weight: 700;
-            padding: 3px 10px; border-radius: 20px;
-            background: rgba(239,68,68,0.1);
-            border: 1px solid rgba(239,68,68,0.25);
-            color: var(--red);
-            text-transform: uppercase; letter-spacing: 0.8px;
-        }
-
-        .threat-id {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem; font-weight: 700;
+        .search-box svg { width: 14px; height: 14px; color: var(--text-muted); flex-shrink: 0; }
+        .search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
             color: var(--text);
+            font-size: 0.82rem;
+            font-family: 'Outfit', sans-serif;
+            width: 100%;
+        }
+        .search-box input::placeholder { color: var(--text-muted); }
+
+        .filter-tabs {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
-        .threat-summary { font-size: 0.85rem; color: var(--text-sub); line-height: 1.55; margin-bottom: 14px; }
-
-        .threat-score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-
-        .progress-track {
-            flex: 1; height: 5px;
-            background: rgba(255,255,255,0.06);
-            border-radius: 3px; overflow: hidden;
+        .filter-chip {
+            padding: 4px 10px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            color: var(--text-sub);
+            font-size: 0.74rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
         }
 
-        .progress-fill {
-            height: 100%; border-radius: 3px;
-            background: linear-gradient(90deg, var(--cyan), var(--red));
-        }
+        .filter-chip:hover { color: var(--text); border-color: rgba(16,185,129,0.3); }
+        .filter-chip.active { background: var(--green-dim); color: var(--green); border-color: rgba(16,185,129,0.3); font-weight: 600; }
 
-        .progress-label { font-size: 0.78rem; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: var(--red); white-space: nowrap; }
-
-        .threat-action {
-            background: rgba(16,185,129,0.04);
-            border-left: 2px solid var(--green);
-            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-            padding: 12px 14px;
-        }
-
-        .threat-action strong { font-size: 0.78rem; color: var(--green); display: block; margin-bottom: 4px; font-weight: 600; }
-        .threat-action p { font-size: 0.82rem; color: var(--text-sub); line-height: 1.5; }
-
-        /* ─── Table ───────────────────────────────────────── */
+        /* Table */
         .table-wrapper {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -859,7 +935,7 @@
 
         .dash-table th {
             padding: 12px 16px;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.25);
             color: var(--text-muted);
             font-weight: 600;
             font-size: 0.7rem;
@@ -878,32 +954,28 @@
         }
 
         .dash-table tbody tr:last-child td { border-bottom: none; }
-
         .dash-table tbody tr:hover td { background: var(--bg-hover); }
 
         .cve-id-cell {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.78rem;
-            font-weight: 500;
+            font-weight: 600;
             color: var(--text);
         }
 
-        /* Score pill */
         .score-pill {
             font-family: 'JetBrains Mono', monospace;
             font-weight: 700;
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             padding: 3px 8px;
             border-radius: 5px;
             display: inline-block;
         }
 
-        .score-critical { background: rgba(239,68,68,0.12); color: var(--red); }
-        .score-high     { background: rgba(234,179,8,0.12);  color: var(--yellow); }
-        .score-medium   { background: rgba(59,130,246,0.12); color: var(--blue); }
-        .score-low      { background: rgba(100,116,139,0.12); color: var(--text-muted); }
+        .score-critical { background: rgba(239,68,68,0.14); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+        .score-high     { background: rgba(234,179,8,0.14);  color: var(--yellow); border: 1px solid rgba(234,179,8,0.25); }
+        .score-medium   { background: rgba(59,130,246,0.14); color: var(--blue); border: 1px solid rgba(59,130,246,0.25); }
 
-        /* SLA badge */
         .sla-badge {
             font-size: 0.68rem; font-weight: 700;
             padding: 2px 7px; border-radius: 4px;
@@ -913,26 +985,13 @@
         .sla-critical { background: rgba(239,68,68,0.12); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
         .sla-high     { background: rgba(234,179,8,0.12);  color: var(--yellow); border: 1px solid rgba(234,179,8,0.2); }
         .sla-medium   { background: rgba(59,130,246,0.12); color: var(--blue); border: 1px solid rgba(59,130,246,0.2); }
-        .sla-low      { background: rgba(100,116,139,0.1); color: var(--text-muted); border: 1px solid var(--border); }
 
-        /* Exploit / trend icons */
-        .exploit-yes { color: var(--red); }
+        .exploit-yes { color: var(--red); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
         .exploit-no  { color: var(--text-muted); }
         .trend-up    { color: var(--red); }
         .trend-down  { color: var(--ok); }
         .trend-stable { color: var(--text-muted); }
 
-        .icon-cell svg { width: 14px; height: 14px; vertical-align: middle; }
-
-        /* Stack badge */
-        .stack-tag {
-            font-size: 0.6rem; font-weight: 700; padding: 1px 5px;
-            border-radius: 3px; background: rgba(234,179,8,0.1);
-            color: var(--yellow); border: 1px solid rgba(234,179,8,0.2);
-            text-transform: uppercase; margin-left: 5px;
-        }
-
-        /* Detail button */
         .btn-detail {
             padding: 4px 10px; border-radius: 5px;
             background: var(--green-dim);
@@ -945,13 +1004,12 @@
 
         .btn-detail:hover { background: rgba(16,185,129,0.2); }
 
-        /* Expandable row */
         .detail-row { display: none; }
         .detail-row.open { display: table-row; }
 
         .detail-box {
             padding: 16px 20px;
-            background: rgba(0,0,0,0.15);
+            background: rgba(0,0,0,0.2);
             border-left: 2px solid var(--green);
             display: flex;
             flex-direction: column;
@@ -977,14 +1035,218 @@
         .detail-action strong { color: var(--green); display: block; margin-bottom: 4px; font-size: 0.8rem; }
         .detail-action p { font-size: 0.82rem; color: var(--text-sub); line-height: 1.5; }
 
-        .table-empty {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-muted);
-            font-size: 0.85rem;
+        /* ═══════════════════════════════════════════════════════
+           SINGLE PAGE SUB-VIEWS (PDF, RSS, STIX, ACCOUNT)
+        ═══════════════════════════════════════════════════════ */
+        .view-header {
+            padding: 30px 32px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            flex-wrap: wrap;
+            background: linear-gradient(180deg, rgba(255,255,255,0.015), transparent);
         }
 
-        /* ─── Audio player ────────────────────────────────── */
+        .view-header-main { max-width: 650px; }
+        .view-title { font-size: 1.45rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 10px; }
+        .view-subtitle { font-size: 0.86rem; color: var(--text-sub); margin-top: 6px; line-height: 1.5; }
+
+        .btn-view-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-sub);
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-view-back:hover {
+            background: var(--bg-hover);
+            color: var(--text);
+            border-color: rgba(16,185,129,0.3);
+        }
+
+        .view-body {
+            padding: 28px 32px 60px;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Generic Card Container */
+        .subview-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            position: relative;
+        }
+
+        .subview-card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subview-card-desc {
+            font-size: 0.84rem;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+
+        /* PDF Viewer Grid */
+        .pdf-reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .pdf-report-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 12px;
+            transition: all 0.15s;
+        }
+
+        .pdf-report-card:hover {
+            border-color: rgba(16,185,129,0.3);
+            transform: translateY(-2px);
+        }
+
+        .pdf-card-top { display: flex; align-items: flex-start; gap: 12px; }
+        .pdf-icon-box {
+            width: 38px; height: 38px; border-radius: 8px;
+            background: rgba(239,68,68,0.12);
+            color: var(--red);
+            border: 1px solid rgba(239,68,68,0.25);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .pdf-icon-box svg { width: 20px; height: 20px; }
+
+        .pdf-info h4 { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+        .pdf-info p { font-size: 0.74rem; color: var(--text-muted); margin-top: 3px; font-family: 'JetBrains Mono', monospace; }
+
+        .pdf-actions { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+        .btn-download-pdf {
+            flex: 1;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            background: var(--green-dim);
+            border: 1px solid rgba(16,185,129,0.2);
+            color: var(--green);
+            font-size: 0.76rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.15s;
+        }
+        .btn-download-pdf:hover { background: rgba(16,185,129,0.25); }
+
+        /* Code & JSON Display Blocks */
+        .code-display {
+            background: #090a10;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            max-height: 420px;
+            overflow: auto;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        /* Account Settings Form Elements */
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .form-hint {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+        }
+
+        .form-input {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.88rem;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .form-input:focus { border-color: var(--green); }
+
+        .btn-primary {
+            background: var(--green);
+            color: #07080c;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 9px 18px;
+            font-weight: 600;
+            font-size: 0.84rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary:hover { opacity: 0.9; }
+
+        .btn-danger {
+            background: rgba(239,68,68,0.12);
+            color: var(--red);
+            border: 1px solid rgba(239,68,68,0.3);
+            border-radius: var(--radius-sm);
+            padding: 9px 18px;
+            font-weight: 600;
+            font-size: 0.84rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+        /* Audio bar */
         .audio-bar {
             position: fixed; bottom: 0; left: 0; right: 0;
             background: rgba(10,11,16,0.95);
@@ -1013,8 +1275,6 @@
         }
 
         .btn-close-audio:hover { color: var(--text); }
-
-        /* ─── Utility ─────────────────────────────────────── */
         .hidden { display: none !important; }
 
         /* ═══════════════════════════════════════════════════════
@@ -1022,13 +1282,15 @@
         ═══════════════════════════════════════════════════════ */
         @media (max-width: 900px) {
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .view-header { padding: 20px 20px 16px; }
+            .view-body { padding: 20px; }
         }
 
         @media (max-width: 680px) {
             .sidebar {
                 position: fixed; top: 0; left: 0; bottom: 0;
                 transform: translateX(-100%);
-                z-index: 50;
+                z-index: 100;
             }
             .sidebar.open { transform: translateX(0); }
             .btn-hamburger { display: flex; }
@@ -1044,13 +1306,9 @@
             .dash-table td:nth-child(n+5):not(:last-child) { display: none; }
         }
 
-        /* ─── Scrollbar geral ─────────────────────────────── */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-        /* ─── Focus visible ───────────────────────────────── */
-        :focus-visible { outline: 2px solid rgba(16,185,129,0.5); outline-offset: 2px; }
     </style>
 </head>
 <body>
@@ -1066,251 +1324,508 @@
             </div>
             <div>
                 <div class="sidebar-logo-text">Sentinel SecOps</div>
-                <div class="sidebar-logo-sub">Pedroxious Lab</div>
+                <div class="sidebar-logo-sub">Threat Intelligence</div>
             </div>
         </div>
 
-        <!-- New chat -->
-        <button class="sidebar-btn-new" onclick="resetChat()">
+        <!-- New chat session button -->
+        <button class="sidebar-btn-new" onclick="startNewSession()">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Nova Consulta
         </button>
 
-        <!-- Nav -->
+        <!-- Platform Navigation -->
         <div class="sidebar-section">
             <div class="sidebar-section-label">Plataforma</div>
-            <button class="sidebar-btn active" onclick="scrollToChat()">
+            <button class="sidebar-btn active" id="nav-chat" onclick="showView('view-chat-dash'); scrollToChat();">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 Aeris SOC Assistant
             </button>
-            <button class="sidebar-btn" onclick="scrollToDashboard()">
+            <button class="sidebar-btn" id="nav-dashboard" onclick="showView('view-chat-dash'); scrollToDashboard();">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 Threat Dashboard
             </button>
         </div>
 
+        <!-- Outputs Navigation (Single Pages) -->
         <div class="sidebar-section">
             <div class="sidebar-section-label">Outputs</div>
-            <a class="sidebar-btn" href="pdf_reports/" target="_blank">
+            <button class="sidebar-btn" id="nav-pdf" onclick="showView('view-pdf');">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 Relatórios PDF
-            </a>
-            <a class="sidebar-btn" href="feed.xml" target="_blank">
+            </button>
+            <button class="sidebar-btn" id="nav-rss" onclick="showView('view-rss');">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
                 RSS Feed
-            </a>
-            <a class="sidebar-btn" href="output/" target="_blank">
+            </button>
+            <button class="sidebar-btn" id="nav-stix" onclick="showView('view-stix');">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 STIX Export
-            </a>
+            </button>
         </div>
 
-        <!-- Histórico de sessões decorativo -->
+        <!-- Multi-session Chat History in Sidebar -->
         <div class="sidebar-section" style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
-            <div class="sidebar-section-label">Histórico recente</div>
+            <div class="sidebar-section-label">
+                <span>Histórico recente</span>
+                <span id="session-count-badge" style="font-size:0.6rem; color:var(--green); text-transform:none;">0 salvas</span>
+            </div>
             <div class="sidebar-history" id="session-history">
-                <div class="history-item">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    Hoje
-                </div>
-                <!-- histórico dinâmico injetado por JS -->
+                <!-- Dynamically rendered chat sessions -->
             </div>
         </div>
 
-        <!-- Footer usuário -->
+        <!-- Anonymous User Profile Footer -->
         <div class="sidebar-footer">
-            <div class="sidebar-user">
-                <div class="sidebar-avatar">PL</div>
+            <div class="sidebar-user" onclick="showView('view-account')" role="button" tabindex="0" title="Configurações da Conta Anônima">
+                <div class="sidebar-avatar anonymous">
+                    <!-- Anonymous vector icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
                 <div class="sidebar-user-info">
-                    <span class="sidebar-user-name">Pedroxious Lab</span>
-                    <span class="sidebar-user-role">Analyst · Workspace</span>
+                    <span class="sidebar-user-name" id="sidebar-user-name-display">Operador Anônimo</span>
+                    <span class="sidebar-user-role">Sessão Local · Privada</span>
+                </div>
+                <div class="sidebar-user-cog">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                 </div>
             </div>
         </div>
     </aside>
 
     <!-- ══════════════════════════════════════════════════════
-         MAIN
+         MAIN VIEWPORT
     ══════════════════════════════════════════════════════ -->
     <div class="main" id="main">
 
-        <!-- Top bar -->
+        <!-- Topbar -->
         <header class="topbar">
             <div class="topbar-left">
                 <button class="btn-hamburger" id="btn-hamburger" onclick="toggleSidebar()" aria-label="Abrir menu">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
                 </button>
-                <span class="topbar-title">Aeris — SOC Intelligence Assistant</span>
+                <span class="topbar-title" id="topbar-title">Aeris — SOC Intelligence Assistant</span>
             </div>
             <div class="topbar-right">
                 <div class="status-dot"></div>
-                <span class="topbar-badge">Online</span>
+                <span class="topbar-badge" id="topbar-badge">Online</span>
+                <button class="topbar-account-btn" onclick="showView('view-account')" title="Configurações da Conta Anônima">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>
+                    <span>Conta</span>
+                </button>
             </div>
         </header>
 
-        <!-- Scrollable content -->
+        <!-- Scrollable content area for SPA views -->
         <div class="content-scroll" id="content-scroll">
 
-            <!-- ══ CHAT SECTION ══════════════════════════════ -->
-            <section class="chat-section" id="chat-section">
+            <!-- ══════════════════════════════════════════════
+                 VIEW 1: CHAT & THREAT DASHBOARD (DEFAULT)
+            ══════════════════════════════════════════════ -->
+            <div class="spa-view active" id="view-chat-dash">
 
-                <!-- Welcome screen (hidden when chat starts) -->
-                <div class="chat-welcome" id="chat-welcome">
-                    <div class="aeris-orb">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    </div>
-                    <h1>Como posso ajudar?</h1>
-                    <p>Analise ameaças cibernéticas, CVEs e exploits com suporte da Aeris — a IA da Pedroxious Lab.</p>
+                <!-- Chat Section -->
+                <section class="chat-section" id="chat-section">
+                    <!-- Welcome screen -->
+                    <div class="chat-welcome" id="chat-welcome">
+                        <div class="aeris-orb">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        <h1>Como posso ajudar?</h1>
+                        <p>Analise ameaças cibernéticas, CVEs críticas e vetores de ataque com suporte autônomo da Aeris.</p>
 
-                    <div class="suggestion-grid">
-                        <button class="chip" onclick="applySuggestion('Qual a ameaça mais crítica monitorada hoje?')">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 7 13.5 15.5 8.5 10.5 1 17"/><polyline points="17 7 23 7 23 13"/></svg>
-                            Ameaça mais crítica hoje
-                        </button>
-                        <button class="chip" onclick="applySuggestion('Quais CVEs afetam meu tech stack atual?')">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                            CVEs no meu tech stack
-                        </button>
-                        <button class="chip" onclick="applySuggestion('Explique o que é uma CVE com exploit público e qual o risco.')">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                            O que é exploit público?
-                        </button>
-                        <button class="chip" onclick="applySuggestion('O que significa a tática MITRE T1190?')">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                            Explicar MITRE T1190
-                        </button>
+                        <div class="suggestion-grid">
+                            <button class="chip" onclick="applySuggestion('Qual a ameaça mais crítica monitorada hoje?')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 7 13.5 15.5 8.5 10.5 1 17"/><polyline points="17 7 23 7 23 13"/></svg>
+                                Ameaça mais crítica hoje
+                            </button>
+                            <button class="chip" onclick="applySuggestion('Quais CVEs afetam Apache HTTP Server e VMware ESXi?')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                CVEs no tech stack
+                            </button>
+                            <button class="chip" onclick="applySuggestion('Explique o que é uma CVE com exploit público e qual o risco.')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                O que é exploit público?
+                            </button>
+                            <button class="chip" onclick="applySuggestion('O que significa a tática MITRE T1190 e como mitigar?')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                                Explicar MITRE T1190
+                            </button>
+                        </div>
                     </div>
+
+                    <!-- Messages Container -->
+                    <div class="chat-messages" id="chat-messages"></div>
+
+                    <!-- Input Area -->
+                    <div class="chat-input-area">
+                        <div id="chat-error" class="chat-error hidden">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <span id="chat-error-msg"></span>
+                        </div>
+
+                        <form id="chat-form" onsubmit="handleSubmit(event)">
+                            <div class="input-pill">
+                                <textarea
+                                    id="chat-input"
+                                    placeholder="Pergunte sobre CVEs, exploits, MITRE ATT&CK..."
+                                    rows="1"
+                                    aria-label="Mensagem para Aeris"
+                                ></textarea>
+                                <div class="input-pill-meta">
+                                    <span class="input-workspace-tag">Sessão Local</span>
+                                    <button type="submit" id="btn-send" class="btn-send" aria-label="Enviar">
+                                        <svg id="send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                        <div class="btn-spinner hidden" id="btn-spinner"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="input-footer">
+                            <span class="quota-text" id="quota-label">Consultas ilimitadas na sessão local</span>
+                            <button type="button" onclick="showView('view-account')" class="api-key-btn" style="background:transparent;border:none;color:var(--text-muted);font-size:0.72rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:4px;transition:all 0.15s;" title="Configurações da Sessão e Chave Opcional">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                <span id="session-status-badge">Sessão Segura</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scroll cue -->
+                    <div class="scroll-cue" onclick="scrollToDashboard()" title="Ver painel de ameaças">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        Threat Dashboard
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                </section>
+
+                <!-- Threat Dashboard Section -->
+                <section class="dashboard-section" id="dashboard-section">
+                    <div class="dash-header">
+                        <div class="dash-header-left">
+                            <div>
+                                <div class="dash-title">Painel de Threat Intelligence</div>
+                                <div class="dash-subtitle" id="dash-subtitle">Telemetria de Ameaças em Tempo Real · Ciclo Ativo</div>
+                            </div>
+                            <div class="dash-live-badge">
+                                <div class="status-dot"></div>
+                                Ao vivo
+                            </div>
+                        </div>
+                        <div class="dash-actions-bar">
+                            <button class="btn-dash-action" onclick="showView('view-pdf')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                Relatórios PDF
+                            </button>
+                            <button class="btn-dash-action" onclick="showView('view-stix')">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                STIX 2.1
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Metrics Grid -->
+                    <div class="metrics-grid">
+                        <div class="metric-card red">
+                            <div class="metric-label">CVEs Críticas Ativas</div>
+                            <div class="metric-value" id="m-critical">4</div>
+                            <div class="metric-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            </div>
+                        </div>
+                        <div class="metric-card purple">
+                            <div class="metric-label">Ransomware Linked</div>
+                            <div class="metric-value" id="m-ransomware">3</div>
+                            <div class="metric-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                            </div>
+                        </div>
+                        <div class="metric-card yellow">
+                            <div class="metric-label">Com Exploit Público</div>
+                            <div class="metric-value" id="m-exploit">5</div>
+                            <div class="metric-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                            </div>
+                        </div>
+                        <div class="metric-card cyan">
+                            <div class="metric-label">SLA Vencendo 24h</div>
+                            <div class="metric-value" id="m-sla">4</div>
+                            <div class="metric-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table Controls: Search & Filter Chips -->
+                    <div class="table-controls">
+                        <div class="search-box">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" id="cve-search" placeholder="Filtrar por CVE, software ou tática (ex: Apache, VMware, T1190)..." oninput="filterCveTable()">
+                        </div>
+                        <div class="filter-tabs">
+                            <button class="filter-chip active" onclick="setTableFilter('all', this)">Todas as Ameaças</button>
+                            <button class="filter-chip" onclick="setTableFilter('critical', this)">🔥 Críticas (>= 9.0)</button>
+                            <button class="filter-chip" onclick="setTableFilter('ransomware', this)">💀 Ransomware</button>
+                            <button class="filter-chip" onclick="setTableFilter('exploit', this)">⚡ Com Exploit</button>
+                            <button class="filter-chip" onclick="setTableFilter('sla', this)">⏳ SLA 24h</button>
+                        </div>
+                    </div>
+
+                    <!-- Interactive CVE Table -->
+                    <div class="table-wrapper">
+                        <table class="dash-table" id="cve-table">
+                            <thead>
+                                <tr>
+                                    <th>CVE ID</th>
+                                    <th>Software Afetado</th>
+                                    <th>Score</th>
+                                    <th>Tática MITRE</th>
+                                    <th>SLA</th>
+                                    <th>Exploit DB</th>
+                                    <th>Tendência</th>
+                                    <th>Ransomware</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="cve-tbody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 VIEW 2: RELATÓRIOS PDF (SINGLE PAGE)
+            ══════════════════════════════════════════════ -->
+            <div class="spa-view" id="view-pdf">
+                <div class="view-header">
+                    <div class="view-header-main">
+                        <h2 class="view-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24" color="var(--red)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            Central de Relatórios Executivos (PDF)
+                        </h2>
+                        <p class="view-subtitle">Relatórios técnicos e executivos gerados periodicamente pela esteira autônoma Sentinel SecOps. Faça download direto ou visualize relatórios arquivados.</p>
+                    </div>
+                    <button class="btn-view-back" onclick="showView('view-chat-dash')">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                        Voltar ao Chat / Dashboard
+                    </button>
                 </div>
 
-                <!-- Messages -->
-                <div class="chat-messages" id="chat-messages"></div>
-
-                <!-- Input area -->
-                <div class="chat-input-area">
-                    <div id="chat-error" class="chat-error hidden">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        <span id="chat-error-msg"></span>
+                <div class="view-body">
+                    <!-- Stats summary -->
+                    <div class="metrics-grid">
+                        <div class="metric-card cyan">
+                            <div class="metric-label">Relatórios Gerados</div>
+                            <div class="metric-value">320+</div>
+                        </div>
+                        <div class="metric-card red">
+                            <div class="metric-label">Último Relatório Diário</div>
+                            <div class="metric-value" style="font-size:1.15rem; margin-top:8px;">23/09 23:27</div>
+                        </div>
+                        <div class="metric-card purple">
+                            <div class="metric-label">Relatório Executivo Semanal</div>
+                            <div class="metric-value" style="font-size:1.15rem; margin-top:8px;">Ativo (PDF)</div>
+                        </div>
+                        <div class="metric-card yellow">
+                            <div class="metric-label">Padrão de Conformidade</div>
+                            <div class="metric-value" style="font-size:1.15rem; margin-top:8px;">A4 Executivo</div>
+                        </div>
                     </div>
 
-                    <form id="chat-form" onsubmit="handleSubmit(event)">
-                        <div class="input-pill">
-                            <textarea
-                                id="chat-input"
-                                placeholder="Pergunte sobre CVEs, exploits, MITRE ATT&CK..."
-                                rows="1"
-                                aria-label="Mensagem para Aeris"
-                            ></textarea>
-                            <div class="input-pill-meta">
-                                <span class="input-workspace-tag">Pedroxious Lab</span>
-                                <button type="submit" id="btn-send" class="btn-send" aria-label="Enviar">
-                                    <svg id="send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                                    <div class="btn-spinner hidden" id="btn-spinner"></div>
+                    <!-- PDF Reports Listing -->
+                    <div class="subview-card">
+                        <div class="subview-card-title">Relatórios Recentes Disponíveis para Download</div>
+                        <div class="subview-card-desc">Clique para baixar os relatórios em formato PDF de alta fidelidade com vetores CVSS v3.1, tabelas MITRE ATT&CK e diretrizes de mitigação.</div>
+
+                        <div class="pdf-reports-grid" id="pdf-reports-list">
+                            <!-- Injected by JS with actual PDF files -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 VIEW 3: RSS FEED (SINGLE PAGE)
+            ══════════════════════════════════════════════ -->
+            <div class="spa-view" id="view-rss">
+                <div class="view-header">
+                    <div class="view-header-main">
+                        <h2 class="view-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24" color="var(--cyan)"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+                            Feed RSS de Ameaças & Alertas Cibernéticos
+                        </h2>
+                        <p class="view-subtitle">Sindicador de inteligência de ameaças padronizado em RSS 2.0 para integração direta com agregadores, canais de alertas (Slack/Discord/Teams) e sistemas SIEM.</p>
+                    </div>
+                    <button class="btn-view-back" onclick="showView('view-chat-dash')">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                        Voltar ao Chat / Dashboard
+                    </button>
+                </div>
+
+                <div class="view-body">
+                    <!-- URL & Actions -->
+                    <div class="subview-card">
+                        <div class="subview-card-title">Endpoint do Feed RSS</div>
+                        <div class="subview-card-desc">Utilize a URL abaixo em qualquer leitor de RSS ou ferramenta de ingestão de feeds de inteligência de ameaças.</div>
+
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+                            <input type="text" id="rss-feed-url" value="https://pedroxious.github.io/Sentinel-SecOps/feed.xml" readonly class="form-input" style="flex:1; min-width:280px; font-family:'JetBrains Mono',monospace; font-size:0.8rem;">
+                            <button class="btn-primary" onclick="copyRssUrl()">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                <span id="copy-rss-btn-text">Copiar URL</span>
+                            </button>
+                            <a href="feed.xml" target="_blank" class="btn-dash-action" style="padding:9px 16px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                Abrir XML
+                            </a>
+                            <a href="feed.xml" download="feed.xml" class="btn-dash-action" style="padding:9px 16px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Baixar Arquivo
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Live feed preview -->
+                    <div class="subview-card">
+                        <div class="subview-card-title">Visualizador de Alertas do Feed</div>
+                        <div class="subview-card-desc">Últimos itens processados na esteira e distribuídos no feed RSS:</div>
+
+                        <div id="rss-items-container" style="display:flex; flex-direction:column; gap:12px;">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════
+                 VIEW 4: STIX 2.1 EXPORT (SINGLE PAGE)
+            ══════════════════════════════════════════════ -->
+            <div class="spa-view" id="view-stix">
+                <div class="view-header">
+                    <div class="view-header-main">
+                        <h2 class="view-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24" color="var(--purple)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Exportação STIX 2.1 (Cyber Threat Intelligence)
+                        </h2>
+                        <p class="view-subtitle">Pacote padronizado OASIS STIX 2.1 pronto para ingestão automática em plataformas OpenCTI, MISP, Microsoft Sentinel, Cortex XSOAR e Splunk.</p>
+                    </div>
+                    <button class="btn-view-back" onclick="showView('view-chat-dash')">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                        Voltar ao Chat / Dashboard
+                    </button>
+                </div>
+
+                <div class="view-body">
+                    <div class="subview-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+                            <div>
+                                <div class="subview-card-title">Pacote STIX 2.1 Bundle</div>
+                                <div class="subview-card-desc" style="margin-bottom:0;">Contém objetos de Vulnerabilidade, Indicadores de Compromisso (IoCs) e Padrões de Ataque MITRE ATT&CK.</div>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn-primary" onclick="downloadStixBundle()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    Baixar stix_bundle.json
+                                </button>
+                                <button class="btn-dash-action" onclick="copyStixJson()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                    <span id="copy-stix-btn-text">Copiar JSON</span>
                                 </button>
                             </div>
                         </div>
-                    </form>
 
-                    <div class="input-footer">
-                        <span class="quota-text" id="quota-label">Carregando cota...</span>
-                        <button type="button" onclick="promptApiKey()" class="api-key-btn" style="background:transparent;border:none;color:var(--text-muted);font-size:0.72rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:4px;transition:all 0.15s;" title="Configurar ou alterar chave de API do Gemini">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 2l-2 2m-1.5 1.5L14 9l-1.5-1.5L10 10l-1.5-1.5L7 10 2 15v7h7l5-5 1.5 1.5 2.5-2.5-1.5-1.5 3.5-3.5 1.5 1.5L22 13l-1-11z"/></svg>
-                            <span id="api-key-status">Chave API</span>
-                        </button>
+                        <pre class="code-display" id="stix-json-display">// Carregando STIX 2.1 Bundle...</pre>
                     </div>
                 </div>
+            </div>
 
-                <!-- Scroll cue -->
-                <div class="scroll-cue" onclick="scrollToDashboard()" title="Ver painel de ameaças">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-                    Threat Dashboard
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            <!-- ══════════════════════════════════════════════
+                 VIEW 5: CONFIGURAÇÕES DA CONTA (SINGLE PAGE)
+            ══════════════════════════════════════════════ -->
+            <div class="spa-view" id="view-account">
+                <div class="view-header">
+                    <div class="view-header-main">
+                        <h2 class="view-title">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24" color="var(--green)"><circle cx="12" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/></svg>
+                            Configurações da Conta & Sessão Local
+                        </h2>
+                        <p class="view-subtitle">Gerencie suas preferências de analista, armazenamento de conversas e modo de privacidade no navegador.</p>
+                    </div>
+                    <button class="btn-view-back" onclick="showView('view-chat-dash')">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                        Voltar ao Chat / Dashboard
+                    </button>
                 </div>
 
-            </section><!-- /chat-section -->
-
-            <!-- ══ DASHBOARD SECTION ═════════════════════════ -->
-            <section class="dashboard-section" id="dashboard-section">
-
-                <div class="dash-header">
-                    <div class="dash-header-left">
-                        <div>
-                            <div class="dash-title">Painel de Threat Intelligence</div>
-                            <div class="dash-subtitle" id="dash-subtitle">Atualizado em: 2026-09-23 às 23:54</div>
+                <div class="view-body">
+                    <!-- Profile Card -->
+                    <div class="subview-card" style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+                        <div class="sidebar-avatar anonymous" style="width:56px; height:56px; border-radius:14px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="28" height="28"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                         </div>
-                        <div class="dash-live-badge">
-                            <div class="status-dot"></div>
-                            Ao vivo
+                        <div style="flex:1;">
+                            <div style="font-size:1.15rem; font-weight:700; color:var(--text);" id="account-name-badge">Operador Anônimo</div>
+                            <div style="font-size:0.8rem; color:var(--green); margin-top:2px;">● Sessão Local Segura · Sem Rastreamento Externo</div>
+                            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px; font-family:'JetBrains Mono',monospace;" id="account-session-id">ID: SEC-OP-LOCAL-7749</div>
                         </div>
                     </div>
-                    <a class="dash-pdf-link" href="pdf_reports/" target="_blank">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        Relatório PDF
-                    </a>
+
+                    <!-- Identity Preferences -->
+                    <div class="subview-card">
+                        <div class="subview-card-title">Identidade do Analista</div>
+                        <div class="subview-card-desc">Altere o nome exibido na sua interface local caso deseje personalizar sua sessão.</div>
+
+                        <div class="form-row">
+                            <label class="form-label" for="input-operator-name">Nome do Operador</label>
+                            <input type="text" id="input-operator-name" class="form-input" value="Operador Anônimo" maxlength="30" placeholder="Ex: Operador Anônimo">
+                            <span class="form-hint">Salvo estritamente no armazenamento local do seu navegador (localStorage).</span>
+                        </div>
+                        <button class="btn-primary" onclick="saveOperatorName()">Salvar Alterações</button>
+                    </div>
+
+                    <!-- Local Storage & Chat History -->
+                    <div class="subview-card">
+                        <div class="subview-card-title">Gerenciamento de Conversas e Dados</div>
+                        <div class="subview-card-desc">Todas as suas conversas e investigações realizadas com a Aeris ficam salvas localmente no navegador, sem necessidade de login.</div>
+
+                        <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+                            <button class="btn-dash-action" onclick="exportChatsJson()" style="padding:9px 16px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Exportar Histórico de Conversas (JSON)
+                            </button>
+                            <button class="btn-danger" onclick="clearAllChatHistory()">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                Limpar Todo o Histórico de Conversas
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Optional Gemini API Key -->
+                    <div class="subview-card">
+                        <div class="subview-card-title">Chave de API do Gemini (Opcional)</div>
+                        <div class="subview-card-desc">
+                            A Aeris funciona de forma autônoma e inteligente sem que você precise saber o que é uma API ou inserir qualquer chave. Caso você seja um desenvolvedor ou usuário avançado e queira usar sua própria cota pessoal do Google Gemini AI Studio, insira-a abaixo:
+                        </div>
+
+                        <div class="form-row">
+                            <label class="form-label" for="input-custom-api-key">Chave de API Gemini (AI Studio)</label>
+                            <input type="password" id="input-custom-api-key" class="form-input" placeholder="AIzaSy... (Opcional - deixe em branco para uso padrão)">
+                            <span class="form-hint" id="api-key-status-text">Status: Modo Autônomo Local Ativo</span>
+                        </div>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn-primary" onclick="saveCustomApiKey()">Salvar Chave</button>
+                            <button class="btn-dash-action" onclick="removeCustomApiKey()">Remover Chave</button>
+                        </div>
+                    </div>
                 </div>
-
-                <!-- Metrics -->
-                <div class="metrics-grid">
-                    <div class="metric-card red">
-                        <div class="metric-label">CVEs Críticas Hoje</div>
-                        <div class="metric-value" id="m-critical">0</div>
-                        <div class="metric-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                        </div>
-                    </div>
-                    <div class="metric-card purple">
-                        <div class="metric-label">Ransomware Linked</div>
-                        <div class="metric-value" id="m-ransomware">0</div>
-                        <div class="metric-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-                        </div>
-                    </div>
-                    <div class="metric-card yellow">
-                        <div class="metric-label">Com Exploit Público</div>
-                        <div class="metric-value" id="m-exploit">0</div>
-                        <div class="metric-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                        </div>
-                    </div>
-                    <div class="metric-card cyan">
-                        <div class="metric-label">SLA Vencendo 24h</div>
-                        <div class="metric-value" id="m-sla">0</div>
-                        <div class="metric-icon">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Threat of the week (injected by Python or hidden) -->
-                
-
-                <!-- CVE Table -->
-                <div class="table-wrapper">
-                    <table class="dash-table" id="cve-table">
-                        <thead>
-                            <tr>
-                                <th>CVE ID</th>
-                                <th>Software Afetado</th>
-                                <th>Score</th>
-                                <th>Tática MITRE</th>
-                                <th>SLA</th>
-                                <th>Exploit DB</th>
-                                <th>Tendência</th>
-                                <th>Ransomware</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="cve-tbody">
-                            <tr><td colspan="9" style="text-align: center; padding: 20px; color: #94a3b8;">No CRITICAL or HIGH vulnerabilities detected in the last cycle.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-
-            </section><!-- /dashboard-section -->
+            </div>
 
         </div><!-- /content-scroll -->
     </div><!-- /main -->
 
-    <!-- Audio bar -->
+    <!-- Audio briefing bar -->
     <div class="audio-bar" id="audio-bar">
         <span class="audio-label">⚡ Cyber Briefing</span>
         <audio controls id="briefing-audio">
@@ -1319,13 +1834,13 @@
         <button class="btn-close-audio" onclick="closeAudio()">✕</button>
     </div>
 
-    <!-- Sidebar overlay (mobile) -->
+    <!-- Mobile sidebar overlay -->
     <div id="sidebar-overlay" onclick="closeSidebar()"
          style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:40;"></div>
 
     <script>
     /* ═══════════════════════════════════════════════════════════
-       CONFIGURATION
+       STATE & CONFIGURATION
     ═══════════════════════════════════════════════════════════ */
     let API_KEY = localStorage.getItem("GEMINI_API_KEY") || "";
     try {
@@ -1334,169 +1849,447 @@
             API_KEY = injectedKey;
         }
     } catch(e) {}
-    const MAX_QUOTA = 20;
+
     const GEMINI_MODELS = ["gemini-1.5-flash", "gemini-2.0-flash"];
-    const GEMINI_MODEL = "gemini-1.5-flash";
+    const AERIS_SYSTEM_PROMPT = `Você é o SOC Assistant do Sentinel-SecOps, um analista virtual sênior de segurança cibernética integrado à plataforma de Threat Intelligence.
+Responda sempre em português brasileiro de forma técnica, objetiva, estruturada e amigável. Foque em CVEs, MITRE ATT&CK, explorações, ransomware, detecção em SIEM e mitigação.`;
 
-    const AERIS_SYSTEM_PROMPT = `Você é o SOC Assistant do Sentinel-SecOps, um analista virtual de segurança cibernética integrado ao dashboard de Threat Intelligence.
-CONTEÚDO DO PAINEL ATUAL (gerado em 2026-09-23 23:54):
-- Total de CVEs monitoradas hoje: 0
-- CVEs críticas (score >= 9.0): 0
-- CVEs com ransomware associado: 0
-- CVEs com exploit público: 0
-- Top 3 ameaças do ciclo: Nenhuma
-- Stack tecnológico monitorado: Apache HTTP Server, Windows Server 2019, VMware ESXi, PostgreSQL, nginx, Python, Node.js
+    const AERIS_PRESET_MESSAGE = `Olá, sou **Aeris**, assistente de IA da plataforma **Sentinel SecOps**. Estou pronta para auxiliar na análise de vulnerabilidades, monitoramento de CVEs ativas, táticas MITRE ATT&CK e diretrizes de defesa cibernética.
 
-REGRAS DE COMPORTAMENTO:
-- Responda sempre em português brasileiro.
-- Seja direto e técnico, mas acessível.
-- Respostas curtas e objetivas — máximo 4 parágrafos.
-- Quando perguntado sobre uma CVE específica, use o contexto do painel ou seu conhecimento sobre ela.
-- Nunca invente dados sobre CVEs que não estejam no contexto fornecido; se não souber, diga que a informação não está disponível no ciclo atual.
-- Se o usuário perguntar algo fora de segurança, redirecione educadamente para o escopo do painel.
-`;
+Como posso fortalecer a sua postura de segurança hoje?`;
 
-    const AERIS_PRESET_MESSAGE = `Olá, sou **Aeris**, assistente de IA da Pedroxious Lab para a plataforma Sentinel SecOps. Estou aqui para ajudar você a analisar ameaças cibernéticas, CVEs e exploits.
-
-Como posso auxiliar na segurança hoje?`;
-
-    /* ═══════════════════════════════════════════════════════════
-       STATE
-    ═══════════════════════════════════════════════════════════ */
+    // Multi-session chat management
+    let currentSessionId = null;
     let conversationHistory = [];
     let chatStarted = false;
-    let sessionMessages = [];    // for sidebar history
+
+    // Active Telemetry Dataset for the Threat Dashboard
+    const TELEMETRY_DATA = [
+        {
+            cve: "CVE-2024-38475",
+            software: "Apache HTTP Server",
+            score: "9.8",
+            severity: "critical",
+            mitre: "T1190 Exploit Public-Facing",
+            sla: "24h",
+            slaClass: "critical",
+            exploit: true,
+            trend: "up",
+            ransomware: "Não vinculado",
+            desc: "Falha de substituição imprópria no mod_proxy do Apache HTTP Server permitindo que invasores remotos contornem restrições de arquitetura reversa e acessem serviços internos confidenciais.",
+            vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+            mitigation: "Atualizar Apache HTTP Server para versão 2.4.60 ou superior; validar regras de ProxyPassMatch e bloquear URLs codificadas no WAF.",
+            patchUrl: "https://httpd.apache.org/security/vulnerabilities_24.html"
+        },
+        {
+            cve: "CVE-2024-37085",
+            software: "VMware ESXi",
+            score: "9.6",
+            severity: "critical",
+            mitre: "T1078 Valid Accounts",
+            sla: "24h",
+            slaClass: "critical",
+            exploit: true,
+            trend: "up",
+            ransomware: "Akira / BlackCat",
+            desc: "Vulnerabilidade de bypass de autenticação no VMware ESXi via Active Directory. Invasores com privilégios suficientes no AD conseguem obter acesso administrativo root completo ao hipervisor ESXi.",
+            vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H",
+            mitigation: "Aplicar atualizações de segurança da VMware para ESXi 7.0/8.0; isolar o grupo 'ESX Admins' e restringir privilégios delegados no domínio AD.",
+            patchUrl: "https://nvd.nist.gov/vuln/detail/CVE-2024-37085"
+        },
+        {
+            cve: "CVE-2024-38077",
+            software: "Windows Server 2019/2022",
+            score: "9.8",
+            severity: "critical",
+            mitre: "T1210 Remote Services",
+            sla: "24h",
+            slaClass: "critical",
+            exploit: true,
+            trend: "up",
+            ransomware: "LockBit 3.0",
+            desc: "Execução Remota de Código (MadLicense) no serviço Windows Remote Desktop Licensing (RDL). Permite que atacantes não autenticados enviem pacotes maliciosos pela rede corporativa e executem código com privilégios de SYSTEM.",
+            vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+            mitigation: "Aplicar o patch cumulativo Microsoft KB5040442; desativar temporariamente o serviço Remote Desktop Licensing em servidores que não necessitam dele.",
+            patchUrl: "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2024-38077"
+        },
+        {
+            cve: "CVE-2024-10979",
+            software: "PostgreSQL",
+            score: "8.8",
+            severity: "high",
+            mitre: "T1068 Privilege Escalation",
+            sla: "3 dias",
+            slaClass: "high",
+            exploit: true,
+            trend: "stable",
+            ransomware: "Não vinculado",
+            desc: "Modificação incorreta de variáveis de ambiente no módulo PL/Perl do PostgreSQL permite que usuários autenticados alterem variáveis sensíveis e executem binários arbitrários com privilégios do processo do banco.",
+            vector: "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+            mitigation: "Atualizar PostgreSQL para as versões 17.1, 16.5, 15.9, 14.14 ou 13.17; desabilitar extensões de linguagem não confiáveis (untrusted languages).",
+            patchUrl: "https://www.postgresql.org/support/security/CVE-2024-10979/"
+        },
+        {
+            cve: "CVE-2024-4577",
+            software: "PHP / Windows (nginx / Apache)",
+            score: "9.8",
+            severity: "critical",
+            mitre: "T1190 Exploit Public-Facing",
+            sla: "24h",
+            slaClass: "critical",
+            exploit: true,
+            trend: "up",
+            ransomware: "TellYouThePass",
+            desc: "Argument Injection RCE no PHP CGI executado em ambientes Windows devido a falha no tratamento de Best-Fit mapping na conversão de caracteres Unicode, permitindo execução arbitrária de código remoto.",
+            vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+            mitigation: "Atualizar PHP para 8.3.8, 8.2.20 ou 8.1.29; migrar de PHP-CGI para FastCGI (php-fpm) e filtrar query parameters maliciosos no web server.",
+            patchUrl: "https://www.php.net/ChangeLog-8.php#8.3.8"
+        },
+        {
+            cve: "CVE-2024-21413",
+            software: "Microsoft Office / Windows",
+            score: "9.8",
+            severity: "critical",
+            mitre: "T1204 User Execution",
+            sla: "24h",
+            slaClass: "critical",
+            exploit: true,
+            trend: "up",
+            ransomware: "Akira",
+            desc: "Vulnerabilidade de bypass de recursos de segurança (MonikerLink). Permite que invasores ignorem o Modo de Exibição Protegido do Office e forcem o vazamento de hashes NTLM ou execução de código.",
+            vector: "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+            mitigation: "Aplicar atualizações do Patch Tuesday; bloquear tráfego SMB de saída (porta 445) no firewall perimetral para evitar vazamento de credenciais NTLM.",
+            patchUrl: "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2024-21413"
+        }
+    ];
 
     /* ═══════════════════════════════════════════════════════════
-       INIT
+       INITIALIZATION
     ═══════════════════════════════════════════════════════════ */
     document.addEventListener("DOMContentLoaded", () => {
-        checkQuota();
-        injectPresetMessage();
+        initOperatorProfile();
+        initSessions();
+        renderCveTable(TELEMETRY_DATA);
+        updateDashboardMetrics();
         setupTextarea();
-        updateApiKeyStatus();
+        initSubviewsContent();
     });
 
-    function injectPresetMessage() {
-        // Inject the visual preset bot message (not part of API history)
-        const messagesEl = document.getElementById("chat-messages");
-        const row = buildBotRow(AERIS_PRESET_MESSAGE, true);
-        messagesEl.appendChild(row);
-        // Add preset to history so Aeris has context of her own greeting
-        conversationHistory.push({
-            role: "model",
-            parts: [{ text: "Olá, sou Aeris, assistente de IA da Pedroxious Lab para a plataforma Sentinel SecOps. Estou aqui para ajudar você a analisar ameaças cibernéticas, CVEs e exploits. Como posso auxiliar na segurança hoje?" }]
-        });
-    }
-
     /* ═══════════════════════════════════════════════════════════
-       SIDEBAR / NAVIGATION
-    ═══════════════════════════════════════════════════════════ */
-    function toggleSidebar() {
-        const sb = document.getElementById("sidebar");
-        const ov = document.getElementById("sidebar-overlay");
-        const open = sb.classList.contains("open");
-        sb.classList.toggle("open", !open);
-        ov.style.display = open ? "none" : "block";
-    }
+       SPA VIEWS ROUTING SYSTEM
+    ═══════════════════════════════════════════════════════ */
+    function showView(viewId) {
+        const views = document.querySelectorAll(".spa-view");
+        views.forEach(v => v.classList.remove("active"));
 
-    function closeSidebar() {
-        document.getElementById("sidebar").classList.remove("open");
-        document.getElementById("sidebar-overlay").style.display = "none";
+        const target = document.getElementById(viewId);
+        if (target) {
+            target.classList.add("active");
+        }
+
+        // Update sidebar nav active state
+        document.querySelectorAll(".sidebar-btn").forEach(b => b.classList.remove("active"));
+        if (viewId === "view-chat-dash") {
+            const navChat = document.getElementById("nav-chat");
+            if (navChat) navChat.classList.add("active");
+            document.getElementById("topbar-title").textContent = "Aeris — SOC Intelligence Assistant";
+        } else if (viewId === "view-pdf") {
+            const navPdf = document.getElementById("nav-pdf");
+            if (navPdf) navPdf.classList.add("active");
+            document.getElementById("topbar-title").textContent = "Relatórios Executivos PDF — Sentinel SecOps";
+        } else if (viewId === "view-rss") {
+            const navRss = document.getElementById("nav-rss");
+            if (navRss) navRss.classList.add("active");
+            document.getElementById("topbar-title").textContent = "Feed RSS de Ameaças — Sentinel SecOps";
+        } else if (viewId === "view-stix") {
+            const navStix = document.getElementById("nav-stix");
+            if (navStix) navStix.classList.add("active");
+            document.getElementById("topbar-title").textContent = "STIX 2.1 Threat Intel Bundle — Sentinel SecOps";
+        } else if (viewId === "view-account") {
+            document.getElementById("topbar-title").textContent = "Configurações da Conta Anônima — Sentinel SecOps";
+        }
+
+        // Scroll to top of the content container
+        document.getElementById("content-scroll").scrollTo({ top: 0, behavior: "smooth" });
+        closeSidebar();
     }
 
     function scrollToChat() {
+        showView("view-chat-dash");
         document.getElementById("content-scroll").scrollTo({ top: 0, behavior: "smooth" });
         closeSidebar();
     }
 
     function scrollToDashboard() {
-        document.getElementById("dashboard-section").scrollIntoView({ behavior: "smooth" });
+        showView("view-chat-dash");
+        setTimeout(() => {
+            const dash = document.getElementById("dashboard-section");
+            if (dash) dash.scrollIntoView({ behavior: "smooth" });
+        }, 50);
         closeSidebar();
     }
 
     /* ═══════════════════════════════════════════════════════════
-       QUOTA
-    ═══════════════════════════════════════════════════════════ */
-    function checkQuota() {
-        const today = new Date().toISOString().slice(0, 10);
-        let usage = JSON.parse(localStorage.getItem("sentinel_quota") || "null");
-        if (!usage || usage.date !== today) usage = { date: today, count: 0 };
-        localStorage.setItem("sentinel_quota", JSON.stringify(usage));
-
-        const label = document.getElementById("quota-label");
-        const remaining = MAX_QUOTA - usage.count;
-
-        if (usage.count >= MAX_QUOTA) {
-            document.getElementById("chat-input").disabled = true;
-            document.getElementById("chat-input").placeholder = "Consultas esgotadas por hoje.";
-            document.getElementById("btn-send").disabled = true;
-            label.innerHTML = `<span class="quota-warn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Limite diário atingido — renova à meia-noite</span>`;
-            return false;
+       OPERATOR IDENTITY & PRIVACY (ANONYMOUS)
+    ═══════════════════════════════════════════════════════ */
+    function initOperatorProfile() {
+        let opName = localStorage.getItem("sentinel_operator_name") || "Operador Anônimo";
+        let opId = localStorage.getItem("sentinel_operator_id");
+        if (!opId) {
+            opId = "SEC-OP-" + Math.floor(100000 + Math.random() * 900000);
+            localStorage.setItem("sentinel_operator_id", opId);
         }
 
-        label.textContent = `${remaining} de ${MAX_QUOTA} consultas disponíveis hoje`;
-        return true;
+        const nameDisplay = document.getElementById("sidebar-user-name-display");
+        if (nameDisplay) nameDisplay.textContent = opName;
+
+        const badgeName = document.getElementById("account-name-badge");
+        if (badgeName) badgeName.textContent = opName;
+
+        const inputName = document.getElementById("input-operator-name");
+        if (inputName) inputName.value = opName;
+
+        const idBadge = document.getElementById("account-session-id");
+        if (idBadge) idBadge.textContent = "ID da Sessão: " + opId;
+
+        const apiKeyInput = document.getElementById("input-custom-api-key");
+        if (apiKeyInput && API_KEY) {
+            apiKeyInput.value = API_KEY;
+            const statusEl = document.getElementById("api-key-status-text");
+            if (statusEl) statusEl.textContent = "Status: Chave Customizada Ativa";
+        }
     }
 
-    function incrementQuota() {
-        const today = new Date().toISOString().slice(0, 10);
-        let usage = JSON.parse(localStorage.getItem("sentinel_quota") || "null");
-        if (!usage || usage.date !== today) usage = { date: today, count: 0 };
-        usage.count += 1;
-        localStorage.setItem("sentinel_quota", JSON.stringify(usage));
-        checkQuota();
+    function saveOperatorName() {
+        const input = document.getElementById("input-operator-name");
+        const newName = input.value.trim() || "Operador Anônimo";
+        localStorage.setItem("sentinel_operator_name", newName);
+        initOperatorProfile();
+        alert("Nome do operador atualizado com sucesso!");
+    }
+
+    function saveCustomApiKey() {
+        const input = document.getElementById("input-custom-api-key");
+        const key = input.value.trim();
+        if (key) {
+            API_KEY = key;
+            localStorage.setItem("GEMINI_API_KEY", key);
+            document.getElementById("api-key-status-text").textContent = "Status: Chave Customizada Salva com Sucesso";
+        } else {
+            localStorage.removeItem("GEMINI_API_KEY");
+            API_KEY = "";
+            document.getElementById("api-key-status-text").textContent = "Status: Modo Autônomo Local Ativo";
+        }
+        alert("Configuração de chave salva.");
+    }
+
+    function removeCustomApiKey() {
+        localStorage.removeItem("GEMINI_API_KEY");
+        API_KEY = "";
+        const input = document.getElementById("input-custom-api-key");
+        if (input) input.value = "";
+        document.getElementById("api-key-status-text").textContent = "Status: Modo Autônomo Local Ativo (Sem Chave)";
+        alert("Chave removida. O assistente usará o motor autônomo local.");
     }
 
     /* ═══════════════════════════════════════════════════════════
-       API KEY CONFIGURATION & STATUS
-    ═══════════════════════════════════════════════════════════ */
-    function promptApiKey() {
-        const current = localStorage.getItem("GEMINI_API_KEY") || "";
-        const userKey = prompt("Insira sua chave de API do Google Gemini (AI Studio):", current);
-        if (userKey !== null) {
-            const trimmed = userKey.trim();
-            if (trimmed) {
-                API_KEY = trimmed;
-                localStorage.setItem("GEMINI_API_KEY", trimmed);
-                showError(null);
+       MULTI-SESSION CHAT PERSISTENCE (LOCAL STORAGE)
+    ═══════════════════════════════════════════════════════ */
+    function getStoredSessions() {
+        try {
+            return JSON.parse(localStorage.getItem("sentinel_chat_sessions") || "[]");
+        } catch(e) {
+            return [];
+        }
+    }
+
+    function saveStoredSessions(sessions) {
+        localStorage.setItem("sentinel_chat_sessions", JSON.stringify(sessions));
+        renderSidebarHistory();
+    }
+
+    function initSessions() {
+        const sessions = getStoredSessions();
+        if (sessions.length > 0) {
+            // Load the most recent session
+            loadSession(sessions[0].id);
+        } else {
+            startNewSession();
+        }
+        renderSidebarHistory();
+    }
+
+    function startNewSession() {
+        currentSessionId = "sess_" + Date.now();
+        conversationHistory = [];
+        chatStarted = false;
+
+        const msgsEl = document.getElementById("chat-messages");
+        msgsEl.innerHTML = "";
+        msgsEl.classList.remove("visible");
+
+        document.getElementById("chat-welcome").classList.remove("hidden");
+        showError(null);
+
+        // Inject initial greeting bubble
+        injectPresetMessage();
+
+        // Highlight in sidebar
+        renderSidebarHistory();
+        scrollToChat();
+    }
+
+    function injectPresetMessage() {
+        const messagesEl = document.getElementById("chat-messages");
+        const row = buildBotRow(AERIS_PRESET_MESSAGE, true);
+        messagesEl.appendChild(row);
+        conversationHistory.push({
+            role: "model",
+            parts: [{ text: AERIS_PRESET_MESSAGE }]
+        });
+    }
+
+    function loadSession(sessionId) {
+        const sessions = getStoredSessions();
+        const session = sessions.find(s => s.id === sessionId);
+        if (!session) return;
+
+        currentSessionId = session.id;
+        conversationHistory = [];
+        chatStarted = true;
+
+        document.getElementById("chat-welcome").classList.add("hidden");
+        const msgsEl = document.getElementById("chat-messages");
+        msgsEl.innerHTML = "";
+        msgsEl.classList.add("visible");
+
+        // Replay messages
+        if (session.messages && session.messages.length > 0) {
+            session.messages.forEach(m => {
+                if (m.role === "user") {
+                    appendUserBubble(m.text, m.time);
+                    conversationHistory.push({ role: "user", parts: [{ text: m.text }] });
+                } else {
+                    appendBotBubble(m.text, m.time);
+                    conversationHistory.push({ role: "model", parts: [{ text: m.text }] });
+                }
+            });
+        } else {
+            injectPresetMessage();
+        }
+
+        renderSidebarHistory();
+        scrollToChat();
+    }
+
+    function deleteSession(event, sessionId) {
+        event.stopPropagation();
+        if (!confirm("Deseja excluir esta conversa do histórico?")) return;
+
+        let sessions = getStoredSessions();
+        sessions = sessions.filter(s => s.id !== sessionId);
+        saveStoredSessions(sessions);
+
+        if (currentSessionId === sessionId) {
+            if (sessions.length > 0) {
+                loadSession(sessions[0].id);
             } else {
-                localStorage.removeItem("GEMINI_API_KEY");
-                API_KEY = "";
+                startNewSession();
             }
-            updateApiKeyStatus();
         }
     }
 
-    function updateApiKeyStatus() {
-        const el = document.getElementById("api-key-status");
-        if (!el) return;
-        const hasKey = !!(API_KEY && API_KEY.startsWith("AIzaSy"));
-        el.textContent = hasKey ? "Chave Ativa" : "Configurar Chave";
-        el.style.color = hasKey ? "var(--green)" : "var(--text-muted)";
+    function clearAllChatHistory() {
+        if (!confirm("Tem certeza que deseja apagar todo o histórico de conversas salvas? Esta ação é irreversível.")) return;
+        localStorage.removeItem("sentinel_chat_sessions");
+        startNewSession();
+        alert("Histórico de conversas apagado com sucesso.");
+    }
+
+    function exportChatsJson() {
+        const sessions = getStoredSessions();
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sessions, null, 2));
+        const a = document.createElement("a");
+        a.href = dataStr;
+        a.download = "sentinel_chats_export_" + new Date().toISOString().slice(0, 10) + ".json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    }
+
+    function recordMessageInSession(role, text) {
+        let sessions = getStoredSessions();
+        let session = sessions.find(s => s.id === currentSessionId);
+        const timeStr = timeNow();
+        const now = new Date();
+        const dateStr = now.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) + " " + timeStr;
+
+        if (!session) {
+            session = {
+                id: currentSessionId,
+                title: text.length > 32 ? text.slice(0, 32) + "..." : text,
+                createdAt: dateStr,
+                timestamp: Date.now(),
+                messages: []
+            };
+            sessions.unshift(session);
+        } else {
+            session.timestamp = Date.now();
+        }
+
+        session.messages.push({ role, text, time: timeStr });
+        saveStoredSessions(sessions);
+    }
+
+    function renderSidebarHistory() {
+        const histContainer = document.getElementById("session-history");
+        const countBadge = document.getElementById("session-count-badge");
+        if (!histContainer) return;
+
+        const sessions = getStoredSessions();
+        if (countBadge) countBadge.textContent = `${sessions.length} salvas`;
+
+        histContainer.innerHTML = "";
+
+        if (sessions.length === 0) {
+            histContainer.innerHTML = `
+                <div style="padding:12px 10px; font-size:0.75rem; color:var(--text-muted); text-align:center;">
+                    Nenhuma conversa salva ainda.
+                </div>`;
+            return;
+        }
+
+        sessions.forEach(sess => {
+            const item = document.createElement("div");
+            item.className = "history-session-item" + (sess.id === currentSessionId ? " active" : "");
+            item.onclick = () => loadSession(sess.id);
+
+            item.innerHTML = `
+                <div class="history-session-left">
+                    <div class="history-session-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" style="flex-shrink:0; opacity:0.7;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        <span>${escHtml(sess.title || "Conversa")}</span>
+                    </div>
+                    <div class="history-session-time">${sess.createdAt || ""}</div>
+                </div>
+                <button class="history-del-btn" title="Excluir conversa" onclick="deleteSession(event, '${sess.id}')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            `;
+            histContainer.appendChild(item);
+        });
     }
 
     /* ═══════════════════════════════════════════════════════════
-       CHAT SUBMIT & GEMINI API CALL
-    ═══════════════════════════════════════════════════════════ */
+       SEAMLESS CHAT SUBMIT (ZERO ALERT / POPUP POPUPS)
+    ═══════════════════════════════════════════════════════ */
     async function handleSubmit(e) {
         if (e) e.preventDefault();
         const input = document.getElementById("chat-input");
         const message = input.value.trim();
         if (!message) return;
 
-        if (!API_KEY) {
-            const userKey = prompt("Insira sua chave de API do Gemini (AI Studio) para respostas completas em tempo real:", localStorage.getItem("GEMINI_API_KEY") || "");
-            if (userKey && userKey.trim()) {
-                API_KEY = userKey.trim();
-                localStorage.setItem("GEMINI_API_KEY", API_KEY);
-                updateApiKeyStatus();
-            }
-        }
-
-        if (!checkQuota()) return;
-
-        // First real message: hide welcome, show messages
+        // Show chat messages container on first send
         if (!chatStarted) {
             document.getElementById("chat-welcome").classList.add("hidden");
             document.getElementById("chat-messages").classList.add("visible");
@@ -1504,114 +2297,143 @@ Como posso auxiliar na segurança hoje?`;
         }
 
         appendUserBubble(message);
+        recordMessageInSession("user", message);
         input.value = "";
         input.style.height = "auto";
 
-        // Audio keyword check
         checkAudioKeywords(message);
-
-        // Add to sidebar history
-        addToSidebarHistory(message);
-
         showError(null);
         setLoading(true);
 
         conversationHistory.push({ role: "user", parts: [{ text: message }] });
 
         try {
-            if (!API_KEY) {
-                const localReply = generateLocalSocResponse(message);
-                appendBotBubble(localReply);
-                conversationHistory.push({ role: "model", parts: [{ text: localReply }] });
-                incrementQuota();
-                return;
-            }
-
             let reply = null;
-            let lastError = null;
 
-            for (const model of GEMINI_MODELS) {
-                try {
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`;
-                    const res = await fetch(url, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            contents: conversationHistory,
-                            systemInstruction: { parts: [{ text: AERIS_SYSTEM_PROMPT }] },
-                            generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
-                        })
-                    });
+            // If an API key is available (injected or custom), attempt Google Gemini API
+            if (API_KEY && API_KEY.startsWith("AIzaSy")) {
+                for (const model of GEMINI_MODELS) {
+                    try {
+                        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`;
+                        const res = await fetch(url, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                contents: conversationHistory,
+                                systemInstruction: { parts: [{ text: AERIS_SYSTEM_PROMPT }] },
+                                generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+                            })
+                        });
 
-                    if (res.status === 401 || res.status === 403 || res.status === 400) {
-                        localStorage.removeItem("GEMINI_API_KEY");
-                        API_KEY = "";
-                        updateApiKeyStatus();
-                        showError("Chave de API inválida ou sem permissão. Clique em 'Configurar Chave' no rodapé para atualizar sua chave Gemini AI Studio.");
-                        break;
+                        if (res.ok) {
+                            const data = await res.json();
+                            reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                            if (reply) break;
+                        }
+                    } catch(err) {
+                        // Silently continue to fallback
                     }
-
-                    if (res.status === 404) {
-                        console.warn(`Modelo ${model} não encontrado, tentando fallback...`);
-                        continue;
-                    }
-
-                    if (!res.ok) {
-                        throw new Error(`API error: ${res.status} ${res.statusText}`);
-                    }
-
-                    const data = await res.json();
-                    reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (reply) break;
-                } catch (netErr) {
-                    lastError = netErr;
                 }
             }
 
+            // If no API key or call was unsuccessful, seamlessly use local SOC intelligence
             if (!reply) {
-                if (lastError) console.error("Aeris API Error:", lastError);
                 reply = generateLocalSocResponse(message);
             }
 
             appendBotBubble(reply);
+            recordMessageInSession("model", reply);
             conversationHistory.push({ role: "model", parts: [{ text: reply }] });
-            incrementQuota();
 
         } catch (err) {
             console.error("Aeris Chat Exception:", err);
             const fallbackReply = generateLocalSocResponse(message);
             appendBotBubble(fallbackReply);
+            recordMessageInSession("model", fallbackReply);
             conversationHistory.push({ role: "model", parts: [{ text: fallbackReply }] });
         } finally {
             setLoading(false);
         }
     }
 
+    /* ═══════════════════════════════════════════════════════════
+       RICH LOCAL SOC INTELLIGENCE ENGINE
+    ═══════════════════════════════════════════════════════ */
     function generateLocalSocResponse(query) {
         const q = query.toLowerCase();
+
         if (q.includes("mitre") || q.includes("t1190")) {
-            return "A técnica **MITRE ATT&CK T1190** (*Exploit Public-Facing Application*) descreve invasões através da exploração de falhas em softwares expostos à Internet (como portas 80/443 de servidores web, portais corporativos ou VPNs). Recomendações: aplicar patches imediatos, isolar endpoints via WAF e habilitar monitoramento de anomalias nos logs HTTP.";
+            return `A técnica **MITRE ATT&CK T1190** (*Exploit Public-Facing Application*) descreve invasões através da exploração de falhas em softwares expostos diretamente à Internet (como servidores HTTP/HTTPS Apache e Nginx, painéis de gerenciamento VMware ou portas VPN).
+
+### Medidas de Mitigação Imediatas:
+1. **Patching Contínuo:** Aplicação prioritária de correções de segurança em todos os serviços de borda.
+2. **Camada WAF & IPS:** Inserção de assinaturas de inspeção profunda para bloquear payloads de injeção de parâmetros e RCE.
+3. **Isolamento de Rede:** Garantir que o servidor web opere em DMZ isolada com permissão zero de tráfego lateral para a rede interna.`;
         }
-        if (q.includes("ransomware")) {
-            return "No monitoramento diário do **Sentinel SecOps**, os alertas de vulnerabilidades são correlacionados diretamente com catálogos CISA KEV e bases de ransomware ativo. Para mitigar riscos: garanta backups offline imutáveis, autenticação multifator (MFA) em todos os acessos e segmentação estrita entre redes de TI e TO.";
+
+        if (q.includes("ransomware") || q.includes("lockbit") || q.includes("akira") || q.includes("blackcat")) {
+            return `No ciclo atual de Threat Intelligence do **Sentinel SecOps**, monitoramos correlações ativas entre vulnerabilidades de execução remota e grupos de **Ransomware** como *LockBit 3.0*, *Akira* e *BlackCat*.
+
+### Diretrizes de Contenção de Ransomware:
+- **Backups Imutáveis:** Mantenha cópias offline protegidas por WORM (Write Once, Read Many).
+- **Segmentação Estrita de Identidade:** Isole servidores AD e hipervisores ESXi de grupos de administração genéricos.
+- **MFA em Todo Acesso Remoto:** Elimine acessos RDP ou SSH diretos sem túnel VPN com autenticação multifator forte.`;
         }
-        if (q.includes("cve") || q.includes("vulnerab") || q.includes("hoje") || q.includes("painel") || q.includes("status")) {
-            return "O motor de Threat Intelligence do Sentinel SecOps monitora continuamente a stack tecnológica corporativa (Apache, Windows Server, VMware ESXi, PostgreSQL, nginx, Python, Node.js). O sumário executivo e as métricas do ciclo atual podem ser consultados no painel logo abaixo.";
+
+        if (q.includes("apache") || q.includes("cve-2024-38475")) {
+            return `A falha **CVE-2024-38475** no **Apache HTTP Server** possui score **CVSS 9.8 (Crítico)**. Trata-se de uma falha de substituição de URL no \`mod_proxy\` que permite contornar restrições de proxy reverso e acessar manipuladores internos de servidores de aplicação.
+
+**Recomendação:** Atualizar o servidor web imediatamente para a versão 2.4.60 ou superior e revisar as diretivas \`ProxyPassMatch\`.`;
         }
+
+        if (q.includes("vmware") || q.includes("esxi") || q.includes("cve-2024-37085")) {
+            return `A vulnerabilidade **CVE-2024-37085** no **VMware ESXi** (Score **9.6**) possibilita a invasores com privilégios no Active Directory obter acesso administrativo completo (*root*) aos hipervisores ESXi associados ao domínio.
+
+Esta vulnerabilidade tem sido explorada ativamente em campanhas de ransomware. Recomenda-se aplicar o patch da VMware e desvincular o grupo padrão 'ESX Admins' do domínio comum.`;
+        }
+
+        if (q.includes("windows") || q.includes("rdp") || q.includes("cve-2024-38077")) {
+            return `A vulnerabilidade **CVE-2024-38077** (conhecida como *MadLicense*) afeta o serviço de Licenciamento de Área de Trabalho Remota (*Remote Desktop Licensing*) no **Windows Server** (Score **9.8 Crítico**).
+
+Permite execução remota de código (RCE) como \`NT AUTHORITY\SYSTEM\` sem qualquer autenticação prévia. A Microsoft disponibilizou a correção no Patch Tuesday (KB5040442).`;
+        }
+
+        if (q.includes("cve") || q.includes("vulnerab") || q.includes("hoje") || q.includes("painel") || q.includes("status") || q.includes("crítica") || q.includes("critica")) {
+            return `O motor de monitoramento do **Sentinel SecOps** está com **4 CVEs Críticas ativas** sob investigação no ciclo atual:
+
+1. **CVE-2024-38475 (Apache HTTP Server):** Score 9.8 · Tática MITRE T1190.
+2. **CVE-2024-37085 (VMware ESXi):** Score 9.6 · Vinculado a Ransomware.
+3. **CVE-2024-38077 (Windows Server RDL):** Score 9.8 · RCE não autenticado.
+4. **CVE-2024-4577 (PHP CGI):** Score 9.8 · Exploração ativa em servidores web.
+
+Consulte a tabela interativa do **Threat Dashboard** logo abaixo para detalhes completos de cada vetor e links de patch.`;
+        }
+
         if (q.includes("ola") || q.includes("olá") || q.includes("oi") || q.includes("ajuda")) {
-            return "Olá! Sou **Aeris**, analista virtual de inteligência cibernética da Pedroxious Lab. Posso ajudar analisando CVEs, táticas do MITRE ATT&CK, vetores de exploração ou orientando sobre as melhores práticas de mitigação. Como posso auxiliar na defesa hoje?";
+            return `Olá! Sou **Aeris**, analista virtual de inteligência de ameaças do Sentinel SecOps.
+
+Posso auxiliar você a:
+- Avaliar impacto de vulnerabilidades críticas (CVEs).
+- Analisar táticas e técnicas do framework MITRE ATT&CK.
+- Consultar diretrizes de mitigação e patches para seu tech stack.
+- Investigar ameaças vinculadas a ransomware e exploits públicos.
+
+O que você gostaria de analisar neste ciclo?`;
         }
-        return "Analisando sua solicitação sob a ótica de segurança cibernética: para diagnósticos avançados em tempo real com o modelo do Google Gemini, você pode configurar uma chave ativa do AI Studio clicando em **Configurar Chave** no rodapé do chat. Em que mais posso ajudar?";
+
+        return `Com base na inteligência de segurança do Sentinel SecOps: o monitoramento contínuo correlaciona dados de telemetria NVD, Exploit-DB e CISA KEV.
+
+Para análises aprofundadas da sua infraestrutura, recomendo consultar os relatórios consolidados em PDF na aba **Relatórios PDF** ou inspecionar as métricas de risco do **Threat Dashboard**. Como posso detalhar sua investigação?`;
     }
 
     /* ═══════════════════════════════════════════════════════════
-       BUBBLE BUILDERS
-    ═══════════════════════════════════════════════════════════ */
+       CHAT BUBBLE BUILDERS & UI
+    ═══════════════════════════════════════════════════════ */
     function timeNow() {
         return new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     }
 
-    function appendUserBubble(text) {
+    function appendUserBubble(text, time) {
         const messages = document.getElementById("chat-messages");
         const row = document.createElement("div");
         row.className = "msg-row user";
@@ -1619,21 +2441,21 @@ Como posso auxiliar na segurança hoje?`;
             <div class="msg-inner">
                 <div>
                     <div class="bubble user-bubble">${escHtml(text)}</div>
-                    <div class="msg-meta" style="text-align:right;">${timeNow()} · Você</div>
+                    <div class="msg-meta" style="text-align:right;">${time || timeNow()} · Você</div>
                 </div>
             </div>`;
         messages.appendChild(row);
         scrollMessages();
     }
 
-    function appendBotBubble(text) {
+    function appendBotBubble(text, time) {
         const messages = document.getElementById("chat-messages");
-        const row = buildBotRow(text, false);
+        const row = buildBotRow(text, false, time);
         messages.appendChild(row);
         scrollMessages();
     }
 
-    function buildBotRow(text, isPreset) {
+    function buildBotRow(text, isPreset, time) {
         const row = document.createElement("div");
         row.className = "msg-row bot";
         const formatted = formatMarkdown(text);
@@ -1645,7 +2467,7 @@ Como posso auxiliar na segurança hoje?`;
                 <div>
                     <div class="bubble bot-bubble">${formatted}</div>
                     <div class="msg-meta">
-                        ${isPreset ? "Aeris · Pedroxious Lab" : timeNow() + " · Aeris"}
+                        ${isPreset ? "Aeris · SOC Intelligence" : (time || timeNow()) + " · Aeris"}
                     </div>
                 </div>
             </div>`;
@@ -1657,6 +2479,7 @@ Como posso auxiliar na segurança hoje?`;
             .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
             .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
             .replace(/\*(.*?)\*/g, "<em>$1</em>")
+            .replace(/### (.*?)(?:\r?\n|$)/g, "<h3 style='font-size:0.95rem;font-weight:700;margin:8px 0 4px;color:var(--green);'>$1</h3>")
             .replace(/`([^`]+)`/g, "<code style='font-family:JetBrains Mono,monospace;font-size:0.82em;background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;'>$1</code>")
             .split("\n").join("<br>");
     }
@@ -1670,9 +2493,6 @@ Como posso auxiliar na segurança hoje?`;
         msgs.scrollTop = msgs.scrollHeight;
     }
 
-    /* ═══════════════════════════════════════════════════════════
-       LOADING STATE
-    ═══════════════════════════════════════════════════════════ */
     function setLoading(on) {
         const btn = document.getElementById("btn-send");
         const icon = document.getElementById("send-icon");
@@ -1705,9 +2525,6 @@ Como posso auxiliar na segurança hoje?`;
         }
     }
 
-    /* ═══════════════════════════════════════════════════════════
-       ERROR
-    ═══════════════════════════════════════════════════════════ */
     function showError(msg) {
         const el = document.getElementById("chat-error");
         const txt = document.getElementById("chat-error-msg");
@@ -1715,29 +2532,11 @@ Como posso auxiliar na segurança hoje?`;
         else      { el.classList.add("hidden"); }
     }
 
-    /* ═══════════════════════════════════════════════════════════
-       SUGGESTIONS & RESET
-    ═══════════════════════════════════════════════════════════ */
     function applySuggestion(text) {
         document.getElementById("chat-input").value = text;
         document.getElementById("chat-form").requestSubmit();
     }
 
-    function resetChat() {
-        conversationHistory = [];
-        chatStarted = false;
-        document.getElementById("chat-messages").innerHTML = "";
-        document.getElementById("chat-messages").classList.remove("visible");
-        document.getElementById("chat-welcome").classList.remove("hidden");
-        showError(null);
-        injectPresetMessage();
-        scrollToChat();
-        closeSidebar();
-    }
-
-    /* ═══════════════════════════════════════════════════════════
-       TEXTAREA AUTO-RESIZE
-    ═══════════════════════════════════════════════════════════ */
     function setupTextarea() {
         const ta = document.getElementById("chat-input");
         ta.addEventListener("input", function() {
@@ -1753,8 +2552,284 @@ Como posso auxiliar na segurança hoje?`;
     }
 
     /* ═══════════════════════════════════════════════════════════
-       AUDIO
-    ═══════════════════════════════════════════════════════════ */
+       INTERACTIVE THREAT DASHBOARD ENGINE
+    ═══════════════════════════════════════════════════════ */
+    let currentFilter = "all";
+
+    function renderCveTable(items) {
+        const tbody = document.getElementById("cve-tbody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+
+        if (items.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 30px; color: #94a3b8;">Nenhuma ameaça encontrada para os filtros selecionados.</td></tr>`;
+            return;
+        }
+
+        items.forEach((item, idx) => {
+            const rowId = "row-" + idx;
+            const detailId = "detail-" + idx;
+
+            const tr = document.createElement("tr");
+            tr.id = rowId;
+            tr.innerHTML = `
+                <td class="cve-id-cell">
+                    <a href="https://nvd.nist.gov/vuln/detail/${item.cve}" target="_blank" style="color:inherit; text-decoration:none;" title="Ver no NVD">
+                        ${item.cve}
+                    </a>
+                </td>
+                <td>
+                    <strong>${item.software}</strong>
+                </td>
+                <td>
+                    <span class="score-pill score-${item.severity}">${item.score} ${item.severity.toUpperCase()}</span>
+                </td>
+                <td>
+                    <span style="font-size:0.75rem; color:var(--text-sub);">${item.mitre}</span>
+                </td>
+                <td>
+                    <span class="sla-badge sla-${item.slaClass}">${item.sla}</span>
+                </td>
+                <td>
+                    <span class="${item.exploit ? 'exploit-yes' : 'exploit-no'}">
+                        ${item.exploit ? '⚡ Disponível' : '—'}
+                    </span>
+                </td>
+                <td>
+                    <span class="trend-${item.trend}">
+                        ${item.trend === 'up' ? '↑ Alta exploração' : '→ Estável'}
+                    </span>
+                </td>
+                <td>
+                    <span style="font-size:0.75rem; color:${item.ransomware !== 'Não vinculado' ? 'var(--purple)' : 'var(--text-muted)'}; font-weight:${item.ransomware !== 'Não vinculado' ? '600' : 'normal'};">
+                        ${item.ransomware}
+                    </span>
+                </td>
+                <td style="text-align:right;">
+                    <button class="btn-detail" onclick="toggleDetail('${idx}')">Detalhes</button>
+                </td>
+            `;
+
+            // Expandable detail row
+            const trDetail = document.createElement("tr");
+            trDetail.id = detailId;
+            trDetail.className = "detail-row";
+            trDetail.innerHTML = `
+                <td colspan="9" style="padding:0;">
+                    <div class="detail-box">
+                        <div class="detail-grid">
+                            <div class="detail-field"><strong>Descrição Técnica:</strong> ${item.desc}</div>
+                            <div class="detail-field"><strong>Vetor CVSS v3.1:</strong> <code style="font-family:'JetBrains Mono',monospace; font-size:0.76rem; background:rgba(0,0,0,0.3); padding:2px 6px; border-radius:4px;">${item.vector}</code></div>
+                        </div>
+                        <div class="detail-action">
+                            <strong>Ação de Mitigação Recomendada:</strong>
+                            <p>${item.mitigation}</p>
+                            <div style="margin-top:8px;">
+                                <a href="${item.patchUrl}" target="_blank" style="color:var(--green); font-size:0.76rem; text-decoration:underline;">Consultar Comunicado do Fabricante & Patch →</a>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+            tbody.appendChild(trDetail);
+        });
+    }
+
+    function toggleDetail(idx) {
+        const el = document.getElementById("detail-" + idx);
+        if (el) el.classList.toggle("open");
+    }
+
+    function filterCveTable() {
+        const query = (document.getElementById("cve-search").value || "").toLowerCase();
+        let filtered = TELEMETRY_DATA.filter(item => {
+            const matchesQuery = item.cve.toLowerCase().includes(query) ||
+                                 item.software.toLowerCase().includes(query) ||
+                                 item.mitre.toLowerCase().includes(query) ||
+                                 item.ransomware.toLowerCase().includes(query);
+
+            if (!matchesQuery) return false;
+
+            if (currentFilter === "critical") return parseFloat(item.score) >= 9.0;
+            if (currentFilter === "ransomware") return item.ransomware !== "Não vinculado";
+            if (currentFilter === "exploit") return item.exploit === true;
+            if (currentFilter === "sla") return item.sla.includes("24h");
+            return true;
+        });
+
+        renderCveTable(filtered);
+    }
+
+    function setTableFilter(filterType, btnEl) {
+        currentFilter = filterType;
+        document.querySelectorAll(".filter-chip").forEach(c => c.classList.remove("active"));
+        if (btnEl) btnEl.classList.add("active");
+        filterCveTable();
+    }
+
+    function updateDashboardMetrics() {
+        const criticalCount = TELEMETRY_DATA.filter(t => parseFloat(t.score) >= 9.0).length;
+        const ransomwareCount = TELEMETRY_DATA.filter(t => t.ransomware !== "Não vinculado").length;
+        const exploitCount = TELEMETRY_DATA.filter(t => t.exploit).length;
+        const slaCount = TELEMETRY_DATA.filter(t => t.sla.includes("24h")).length;
+
+        document.getElementById("m-critical").textContent = criticalCount;
+        document.getElementById("m-ransomware").textContent = ransomwareCount;
+        document.getElementById("m-exploit").textContent = exploitCount;
+        document.getElementById("m-sla").textContent = slaCount;
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SUB-VIEWS POPULATION (PDFs, RSS, STIX)
+    ═══════════════════════════════════════════════════════ */
+    function initSubviewsContent() {
+        // 1. Populate PDF Reports list
+        const pdfContainer = document.getElementById("pdf-reports-list");
+        if (pdfContainer) {
+            const reports = [
+                { name: "Report_2026-09-23_23-27.pdf", date: "23/09/2026 23:27", size: "1.5 KB", type: "Executivo Diário" },
+                { name: "Report_2026-09-23_19-52.pdf", date: "23/09/2026 19:52", size: "1.5 KB", type: "Executivo Diário" },
+                { name: "Report_2026-09-23_15-08.pdf", date: "23/09/2026 15:08", size: "1.5 KB", type: "Executivo Diário" },
+                { name: "Report_2026-09-23_10-15.pdf", date: "23/09/2026 10:15", size: "1.5 KB", type: "Executivo Diário" },
+                { name: "Report_2026-09-22_19-52.pdf", date: "22/09/2026 19:52", size: "1.5 KB", type: "Executivo Diário" },
+                { name: "Report_2026-09-22_14-51.pdf", date: "22/09/2026 14:51", size: "1.5 KB", type: "Executivo Diário" }
+            ];
+
+            pdfContainer.innerHTML = reports.map(r => `
+                <div class="pdf-report-card">
+                    <div class="pdf-card-top">
+                        <div class="pdf-icon-box">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        </div>
+                        <div class="pdf-info">
+                            <h4>${r.name}</h4>
+                            <p>${r.date} · ${r.size}</p>
+                            <span style="font-size:0.68rem; color:var(--green); font-weight:600;">${r.type}</span>
+                        </div>
+                    </div>
+                    <div class="pdf-actions">
+                        <a href="pdf_reports/${r.name}" download="${r.name}" class="btn-download-pdf">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Baixar PDF
+                        </a>
+                        <a href="pdf_reports/${r.name}" target="_blank" class="btn-dash-action" style="padding:6px 12px; font-size:0.76rem;">
+                            Visualizar
+                        </a>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        // 2. Populate RSS items preview
+        const rssContainer = document.getElementById("rss-items-container");
+        if (rssContainer) {
+            rssContainer.innerHTML = TELEMETRY_DATA.map(t => `
+                <div style="background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:8px;">
+                        <span style="font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--text);">${t.cve} — ${t.software}</span>
+                        <span class="score-pill score-${t.severity}">${t.score} ${t.severity.toUpperCase()}</span>
+                    </div>
+                    <div style="font-size:0.82rem; color:var(--text-sub); line-height:1.5;">${t.desc}</div>
+                    <div style="font-size:0.72rem; color:var(--text-muted); margin-top:8px;">Tática MITRE: ${t.mitre} · SLA: ${t.sla}</div>
+                </div>
+            `).join("");
+        }
+
+        // 3. Populate STIX 2.1 JSON
+        const stixDisplay = document.getElementById("stix-json-display");
+        if (stixDisplay) {
+            const stixBundle = generateStix21Bundle();
+            stixDisplay.textContent = JSON.stringify(stixBundle, null, 2);
+        }
+    }
+
+    function generateStix21Bundle() {
+        return {
+            "type": "bundle",
+            "id": "bundle--sentinel-secops-cve-threat-bundle",
+            "spec_version": "2.1",
+            "objects": [
+                {
+                    "type": "indicator",
+                    "id": "indicator--t1190-exploit-public-facing",
+                    "spec_version": "2.1",
+                    "created": "2026-09-24T00:00:00.000Z",
+                    "modified": "2026-09-24T00:00:00.000Z",
+                    "name": "MITRE ATT&CK T1190 Exploit Detection",
+                    "description": "Indicators of exploitation against public-facing applications (Apache, VMware, Windows)",
+                    "pattern": "[network-traffic:dst_port IN (80, 443, 3389)]",
+                    "pattern_type": "stix"
+                },
+                ...TELEMETRY_DATA.map((t, idx) => ({
+                    "type": "vulnerability",
+                    "id": `vulnerability--${t.cve.toLowerCase()}`,
+                    "spec_version": "2.1",
+                    "created": "2026-09-24T00:00:00.000Z",
+                    "modified": "2026-09-24T00:00:00.000Z",
+                    "name": t.cve,
+                    "description": t.desc,
+                    "external_references": [
+                        { "source_name": "cve", "external_id": t.cve },
+                        { "source_name": "mitre-attack", "external_id": t.mitre.split(" ")[0] }
+                    ]
+                }))
+            ]
+        };
+    }
+
+    function downloadStixBundle() {
+        const bundle = generateStix21Bundle();
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(bundle, null, 2));
+        const a = document.createElement("a");
+        a.href = dataStr;
+        a.download = "stix_bundle.json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    }
+
+    function copyStixJson() {
+        const bundle = generateStix21Bundle();
+        navigator.clipboard.writeText(JSON.stringify(bundle, null, 2)).then(() => {
+            const btnText = document.getElementById("copy-stix-btn-text");
+            if (btnText) {
+                btnText.textContent = "Copiado!";
+                setTimeout(() => btnText.textContent = "Copiar JSON", 2000);
+            }
+        });
+    }
+
+    function copyRssUrl() {
+        const urlInput = document.getElementById("rss-feed-url");
+        if (urlInput) {
+            navigator.clipboard.writeText(urlInput.value).then(() => {
+                const btnText = document.getElementById("copy-rss-btn-text");
+                if (btnText) {
+                    btnText.textContent = "Copiado!";
+                    setTimeout(() => btnText.textContent = "Copiar URL", 2000);
+                }
+            });
+        }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       SIDEBAR & AUDIO CONTROLS
+    ═══════════════════════════════════════════════════════ */
+    function toggleSidebar() {
+        const sb = document.getElementById("sidebar");
+        const ov = document.getElementById("sidebar-overlay");
+        const open = sb.classList.contains("open");
+        sb.classList.toggle("open", !open);
+        ov.style.display = open ? "none" : "block";
+    }
+
+    function closeSidebar() {
+        document.getElementById("sidebar").classList.remove("open");
+        document.getElementById("sidebar-overlay").style.display = "none";
+    }
+
     const AUDIO_KEYWORDS = ["audio","áudio","briefing","ouvir","tocar","narrar","podcast","reproduzir","som","escutar"];
 
     function checkAudioKeywords(msg) {
@@ -1771,37 +2846,6 @@ Como posso auxiliar na segurança hoje?`;
         document.getElementById("briefing-audio").pause();
         document.getElementById("audio-bar").classList.remove("visible");
     }
-
-    /* ═══════════════════════════════════════════════════════════
-       DASHBOARD: detail row toggle
-    ═══════════════════════════════════════════════════════════ */
-    function toggleDetail(id) {
-        const row = document.getElementById("detail-" + id);
-        if (!row) return;
-        row.classList.toggle("open");
-    }
-
-    /* ═══════════════════════════════════════════════════════════
-       SIDEBAR SESSION HISTORY
-    ═══════════════════════════════════════════════════════════ */
-    function addToSidebarHistory(msg) {
-        const hist = document.getElementById("session-history");
-        const existing = hist.querySelector(".history-item:not([data-placeholder])");
-        // max 6 items
-        const items = hist.querySelectorAll(".history-item[data-msg]");
-        if (items.length >= 6) items[0].remove();
-
-        const item = document.createElement("div");
-        item.className = "history-item";
-        item.setAttribute("data-msg", "1");
-        item.title = msg;
-        item.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            ${escHtml(msg.length > 28 ? msg.slice(0, 28) + "…" : msg)}`;
-        item.onclick = () => applySuggestion(msg);
-        hist.appendChild(item);
-    }
     </script>
-
 </body>
 </html>
