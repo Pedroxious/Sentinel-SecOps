@@ -10,7 +10,7 @@ class WeeklyPDF(FPDF):
             self.set_font("helvetica", "B", 10)
             self.set_text_color(100, 100, 100)
             self.cell(0, 10, "Sentinel SecOps - Relatório Executivo Semanal", border=False, ln=False, align="L")
-            self.cell(0, 10, "CONFIDENCIAL — USO INTERNO", border=False, ln=True, align="R")
+            self.cell(0, 10, "CONFIDENCIAL - USO INTERNO", border=False, ln=True, align="R")
             self.line(10, 18, 200, 18)
             self.ln(5)
 
@@ -107,7 +107,7 @@ def generate_weekly_report():
             
         pdf.set_font("helvetica", "B", 10)
         pdf.set_text_color(220, 38, 38) # Red-600
-        pdf.cell(0, 10, "CLASSIFICAÇÃO: CONFIDENCIAL — USO INTERNO", ln=True, align="C")
+        pdf.cell(0, 10, "CLASSIFICAÇÃO: CONFIDENCIAL - USO INTERNO", ln=True, align="C")
         
         # PAGE 2 - Sumário Executivo
         pdf.add_page()

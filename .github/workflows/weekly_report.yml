@@ -21,37 +21,63 @@ jobs:
           python-version: '3.11'
 
       - name: Install Dependencies
-        run: pip install pandas requests google-generativeai fpdf2
+        run: pip install pandas requests google-generativeai fpdf2 pillow
 
       - name: Generate Weekly Report
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          # Run image generator to update assets/dashboard_header.png (weekly update)
+          # Ensure assets/dashboard_header.png exists
           python -c "
-          import os, google.generativeai as genai
-          genai.configure(api_key=os.environ['GEMINI_API_KEY'])
-          model = genai.GenerativeModel('gemini-2.5-flash')
-          prompt = \"\"\"Create a professional cybersecurity threat intelligence dashboard header image. Dark background with deep blue and cyan colors. Show abstract network nodes, connection lines, and a subtle shield icon. Include minimal text: 'SENTINEL SECOPS' in a clean monospace font. Style: corporate tech, no humans, no logos, clean geometric shapes. 1200x400 pixels banner format.\"\"\"
-          try:
-              os.makedirs('assets', exist_ok=True)
-              response = model.generate_content(prompt, generation_config={'response_modalities': ['IMAGE']})
-              for part in response.candidates[0].content.parts:
-                  if hasattr(part, 'inline_data') and part.inline_data:
-                      with open('assets/dashboard_header.png', 'wb') as f:
-                          f.write(part.inline_data.data)
-                      print('Generated weekly banner image.')
-                      break
-          except Exception as e:
-              print('Failed to generate weekly banner:', e)
+          import os
+          from PIL import Image, ImageDraw, ImageFont
+
+          os.makedirs('assets', exist_ok=True)
+          banner_path = 'assets/dashboard_header.png'
+          if not os.path.exists(banner_path):
+              width, height = 1200, 400
+              img = Image.new('RGB', (width, height), color=(10, 15, 29))
+              draw = ImageDraw.Draw(img)
+              for x in range(0, width, 40):
+                  draw.line([(x, 0), (x, height)], fill=(16, 26, 48), width=1)
+              for y in range(0, height, 40):
+                  draw.line([(0, y), (width, y)], fill=(16, 26, 48), width=1)
+              points = [
+                  (150, 100), (280, 70), (450, 120), (320, 240), (180, 280), (100, 200),
+                  (1050, 80), (920, 140), (850, 260), (1000, 310), (1120, 230), (1080, 160)
+              ]
+              for i in range(len(points)-1):
+                  draw.line([points[i], points[i+1]], fill=(14, 165, 233), width=2)
+              for pt in points:
+                  draw.ellipse([pt[0]-5, pt[1]-5, pt[0]+5, pt[1]+5], fill=(56, 189, 248), outline=(14, 165, 233))
+              try:
+                  font_large = ImageFont.truetype('DejaVuSans-Bold.ttf', 44)
+                  font_sub = ImageFont.truetype('DejaVuSans.ttf', 20)
+              except Exception:
+                  font_large = ImageFont.load_default()
+                  font_sub = ImageFont.load_default()
+              draw.text((width//2, 160), 'SENTINEL SECOPS', fill=(255, 255, 255), anchor='mm', font=font_large)
+              draw.text((width//2, 220), 'THREAT INTELLIGENCE & CYBER DEFENSE OPERATIONS', fill=(56, 189, 248), anchor='mm', font=font_sub)
+              img.save(banner_path)
+              print('Generated weekly banner image.')
           "
           # Run PDF generator
           python scripts/output/weekly_pdf_generator.py
+
+      - name: Upload Weekly Report Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: weekly-executive-report
+          path: reports/weekly/*.pdf
+          if-no-files-found: ignore
 
       - name: Commit and Push Weekly Report
         run: |
           git config --global user.name  "Sentinel SecOps Bot"
           git config --global user.email "sentinel-bot@users.noreply.github.com"
-          git add reports/weekly/ assets/dashboard_header.png
+          git add reports/weekly/
+          [ -f "assets/dashboard_header.png" ] && git add assets/dashboard_header.png
           git diff --staged --quiet || git commit -m "Auto-update: Weekly Executive Report $(date '+%Y-W%V')"
+          git pull --rebase origin main || true
           git push
