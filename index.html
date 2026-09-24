@@ -2414,12 +2414,18 @@
     let API_KEY = localStorage.getItem("GEMINI_API_KEY") || "";
     try {
         const injectedKey = atob("");
-        if (!API_KEY && injectedKey && injectedKey.startsWith("AIzaSy")) {
+        if (!API_KEY && injectedKey && injectedKey.length > 10) {
             API_KEY = injectedKey;
         }
     } catch(e) {}
 
-    const GEMINI_MODELS = ["gemini-1.5-flash", "gemini-2.0-flash"];
+    const GEMINI_MODELS = [
+        "gemini-2.0-flash",
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-flash",
+        "gemini-2.5-flash",
+        "gemini-1.5-pro"
+    ];
     const AERIS_SYSTEM_PROMPT = `Você é o SOC Assistant do Sentinel-SecOps, um analista virtual de segurança cibernética integrado ao dashboard de Threat Intelligence.
 CONTEÚDO DO PAINEL ATUAL (gerado em 2026-09-24 00:30):
 - Total de CVEs monitoradas hoje: 0
@@ -2914,13 +2920,16 @@ Para continuar investigando sem interrupções e com modelos mais avançados, fa
             let reply = null;
 
             // 1. If user configured custom Gemini API key, use it directly
-            if (API_KEY && API_KEY.startsWith("AIzaSy")) {
+            if (API_KEY && (API_KEY.startsWith("AIzaSy") || API_KEY.startsWith("AQ.") || API_KEY.length > 20)) {
                 for (const model of GEMINI_MODELS) {
                     try {
                         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`;
                         const res = await fetch(url, {
                             method: "POST",
-                            headers: { "Content-Type": "application/json" },
+                            headers: { 
+                                "Content-Type": "application/json",
+                                "x-goog-api-key": API_KEY
+                            },
                             body: JSON.stringify({
                                 contents: conversationHistory,
                                 systemInstruction: { parts: [{ text: AERIS_SYSTEM_PROMPT }] },
@@ -2939,9 +2948,13 @@ Para continuar investigando sem interrupções e com modelos mais avançados, fa
             // 2. If no custom key or direct call failed, call the secure Cloudflare Worker Proxy
             if (!reply && CLOUDFLARE_WORKER_URL) {
                 try {
+                    const reqHeaders = { "Content-Type": "application/json" };
+                    if (API_KEY && (API_KEY.startsWith("AIzaSy") || API_KEY.startsWith("AQ.") || API_KEY.length > 20)) {
+                        reqHeaders["x-gemini-key"] = API_KEY;
+                    }
                     const res = await fetch(CLOUDFLARE_WORKER_URL, {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                        headers: reqHeaders,
                         body: JSON.stringify({
                             contents: conversationHistory,
                             systemInstruction: { parts: [{ text: AERIS_SYSTEM_PROMPT }] },
@@ -2951,6 +2964,9 @@ Para continuar investigando sem interrupções e com modelos mais avançados, fa
                     if (res.ok) {
                         const data = await res.json();
                         reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    } else {
+                        const errData = await res.json().catch(() => ({}));
+                        console.warn("Cloudflare Worker call status:", res.status, errData);
                     }
                 } catch(proxyErr) {
                     console.warn("Cloudflare Worker call exception:", proxyErr);
