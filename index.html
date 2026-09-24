@@ -1505,7 +1505,7 @@
                         <div class="dash-header-left">
                             <div>
                                 <div class="dash-title">Painel de Threat Intelligence</div>
-                                <div class="dash-subtitle" id="dash-subtitle">Atualizado em: 2026-09-24 às 00:30</div>
+                                <div class="dash-subtitle" id="dash-subtitle">Atualizado em: 2026-09-24 às 00:35</div>
                             </div>
                             <div class="dash-live-badge">
                                 <div class="status-dot"></div>
@@ -1844,7 +1844,7 @@
     ═══════════════════════════════════════════════════════════ */
     let API_KEY = localStorage.getItem("GEMINI_API_KEY") || "";
     try {
-        const injectedKey = atob("");
+        const injectedKey = atob("QVEuQWI4Uk42SzJiM3AwaHRTZU9nRWJKYlBtbkc5aVN6LUlaM19XS1gxcnN6R1VvalBqRVE=");
         if (!API_KEY && injectedKey && injectedKey.startsWith("AIzaSy")) {
             API_KEY = injectedKey;
         }
@@ -1852,13 +1852,13 @@
 
     const GEMINI_MODELS = ["gemini-1.5-flash", "gemini-2.0-flash"];
     const AERIS_SYSTEM_PROMPT = `Você é o SOC Assistant do Sentinel-SecOps, um analista virtual de segurança cibernética integrado ao dashboard de Threat Intelligence.
-CONTEÚDO DO PAINEL ATUAL (gerado em 2026-09-24 00:30):
+CONTEÚDO DO PAINEL ATUAL (gerado em 2026-09-24 00:35):
 - Total de CVEs monitoradas hoje: 0
 - CVEs críticas (score >= 9.0): 0
 - CVEs com ransomware associado: 0
 - CVEs com exploit público: 0
 - Top 3 ameaças do ciclo: Nenhuma
-- Stack tecnológico monitorado: Apache, VMware
+- Stack tecnológico monitorado: Apache HTTP Server, Windows Server 2019, VMware ESXi, PostgreSQL, nginx, Python, Node.js
 
 REGRAS DE COMPORTAMENTO:
 - Responda sempre em português brasileiro.
