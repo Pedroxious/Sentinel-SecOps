@@ -1505,7 +1505,7 @@
                         <div class="dash-header-left">
                             <div>
                                 <div class="dash-title">Painel de Threat Intelligence</div>
-                                <div class="dash-subtitle" id="dash-subtitle">Telemetria de Ameaças em Tempo Real · Ciclo Ativo</div>
+                                <div class="dash-subtitle" id="dash-subtitle">Atualizado em: 2026-09-24 às 00:19</div>
                             </div>
                             <div class="dash-live-badge">
                                 <div class="status-dot"></div>
@@ -1851,8 +1851,23 @@
     } catch(e) {}
 
     const GEMINI_MODELS = ["gemini-1.5-flash", "gemini-2.0-flash"];
-    const AERIS_SYSTEM_PROMPT = `Você é o SOC Assistant do Sentinel-SecOps, um analista virtual sênior de segurança cibernética integrado à plataforma de Threat Intelligence.
-Responda sempre em português brasileiro de forma técnica, objetiva, estruturada e amigável. Foque em CVEs, MITRE ATT&CK, explorações, ransomware, detecção em SIEM e mitigação.`;
+    const AERIS_SYSTEM_PROMPT = `Você é o SOC Assistant do Sentinel-SecOps, um analista virtual de segurança cibernética integrado ao dashboard de Threat Intelligence.
+CONTEÚDO DO PAINEL ATUAL (gerado em 2026-09-24 00:19):
+- Total de CVEs monitoradas hoje: 0
+- CVEs críticas (score >= 9.0): 0
+- CVEs com ransomware associado: 0
+- CVEs com exploit público: 0
+- Top 3 ameaças do ciclo: Nenhuma
+- Stack tecnológico monitorado: Apache HTTP Server, Windows Server 2019, VMware ESXi, PostgreSQL, nginx, Python, Node.js
+
+REGRAS DE COMPORTAMENTO:
+- Responda sempre em português brasileiro.
+- Seja direto e técnico, mas acessível.
+- Respostas curtas e objetivas — máximo 4 parágrafos.
+- Quando perguntado sobre uma CVE específica, use o contexto do painel ou seu conhecimento sobre ela.
+- Nunca invente dados sobre CVEs que não estejam no contexto fornecido; se não souber, diga que a informação não está disponível no ciclo atual.
+- Se o usuário perguntar algo fora de segurança, redirecione educadamente para o escopo do painel.
+`;
 
     const AERIS_PRESET_MESSAGE = `Olá, sou **Aeris**, assistente de IA da plataforma **Sentinel SecOps**. Estou pronta para auxiliar na análise de vulnerabilidades, monitoramento de CVEs ativas, táticas MITRE ATT&CK e diretrizes de defesa cibernética.
 
@@ -2479,9 +2494,11 @@ Para análises aprofundadas da sua infraestrutura, recomendo consultar os relat�
             .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
             .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
             .replace(/\*(.*?)\*/g, "<em>$1</em>")
-            .replace(/### (.*?)(?:\r?\n|$)/g, "<h3 style='font-size:0.95rem;font-weight:700;margin:8px 0 4px;color:var(--green);'>$1</h3>")
+            .replace(/### (.*?)(?:?
+|$)/g, "<h3 style='font-size:0.95rem;font-weight:700;margin:8px 0 4px;color:var(--green);'>$1</h3>")
             .replace(/`([^`]+)`/g, "<code style='font-family:JetBrains Mono,monospace;font-size:0.82em;background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;'>$1</code>")
-            .split("\n").join("<br>");
+            .split("
+").join("<br>");
     }
 
     function escHtml(t) {
