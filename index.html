@@ -624,9 +624,9 @@
         .input-footer {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             margin-top: 8px;
-            gap: 6px;
+            gap: 12px;
         }
 
         .quota-text {
@@ -1212,6 +1212,10 @@
 
                     <div class="input-footer">
                         <span class="quota-text" id="quota-label">Carregando cota...</span>
+                        <button type="button" onclick="promptApiKey()" class="api-key-btn" style="background:transparent;border:none;color:var(--text-muted);font-size:0.72rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:4px;transition:all 0.15s;" title="Configurar ou alterar chave de API do Gemini">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 2l-2 2m-1.5 1.5L14 9l-1.5-1.5L10 10l-1.5-1.5L7 10 2 15v7h7l5-5 1.5 1.5 2.5-2.5-1.5-1.5 3.5-3.5 1.5 1.5L22 13l-1-11z"/></svg>
+                            <span id="api-key-status">Chave API</span>
+                        </button>
                     </div>
                 </div>
 
@@ -1323,12 +1327,16 @@
     /* ═══════════════════════════════════════════════════════════
        CONFIGURATION
     ═══════════════════════════════════════════════════════════ */
-    let API_KEY = atob("QVEuQWI4Uk42SzJiM3AwaHRTZU9nRWJKYlBtbkc5aVN6LUlaM19XS1gxcnN6R1VvalBqRVE=");          // Base64-encoded Gemini API key injected by scraper.py
-    if (!API_KEY) {
-        API_KEY = localStorage.getItem("GEMINI_API_KEY") || "";
-    }
+    let API_KEY = localStorage.getItem("GEMINI_API_KEY") || "";
+    try {
+        const injectedKey = atob("QVEuQWI4Uk42SzJiM3AwaHRTZU9nRWJKYlBtbkc5aVN6LUlaM19XS1gxcnN6R1VvalBqRVE=");
+        if (!API_KEY && injectedKey && injectedKey.startsWith("AIzaSy")) {
+            API_KEY = injectedKey;
+        }
+    } catch(e) {}
     const MAX_QUOTA = 20;
-    const GEMINI_MODEL = "gemini-3.1-flash";
+    const GEMINI_MODELS = ["gemini-1.5-flash", "gemini-2.0-flash"];
+    const GEMINI_MODEL = "gemini-1.5-flash";
 
     const AERIS_SYSTEM_PROMPT = `Você é o SOC Assistant do Sentinel-SecOps, um analista virtual de segurança cibernética integrado ao dashboard de Threat Intelligence.
 CONTEÚDO DO PAINEL ATUAL (gerado em 2026-09-23 23:27):
@@ -1366,6 +1374,7 @@ Como posso auxiliar na segurança hoje?`;
         checkQuota();
         injectPresetMessage();
         setupTextarea();
+        updateApiKeyStatus();
     });
 
     function injectPresetMessage() {
@@ -1440,22 +1449,49 @@ Como posso auxiliar na segurança hoje?`;
     }
 
     /* ═══════════════════════════════════════════════════════════
-       CHAT SUBMIT
+       API KEY CONFIGURATION & STATUS
+    ═══════════════════════════════════════════════════════════ */
+    function promptApiKey() {
+        const current = localStorage.getItem("GEMINI_API_KEY") || "";
+        const userKey = prompt("Insira sua chave de API do Google Gemini (AI Studio):", current);
+        if (userKey !== null) {
+            const trimmed = userKey.trim();
+            if (trimmed) {
+                API_KEY = trimmed;
+                localStorage.setItem("GEMINI_API_KEY", trimmed);
+                showError(null);
+            } else {
+                localStorage.removeItem("GEMINI_API_KEY");
+                API_KEY = "";
+            }
+            updateApiKeyStatus();
+        }
+    }
+
+    function updateApiKeyStatus() {
+        const el = document.getElementById("api-key-status");
+        if (!el) return;
+        const hasKey = !!(API_KEY && API_KEY.startsWith("AIzaSy"));
+        el.textContent = hasKey ? "Chave Ativa" : "Configurar Chave";
+        el.style.color = hasKey ? "var(--green)" : "var(--text-muted)";
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       CHAT SUBMIT & GEMINI API CALL
     ═══════════════════════════════════════════════════════════ */
     async function handleSubmit(e) {
-        e.preventDefault();
+        if (e) e.preventDefault();
         const input = document.getElementById("chat-input");
         const message = input.value.trim();
         if (!message) return;
 
         if (!API_KEY) {
-            const userKey = prompt("Por favor, insira sua chave de API do Gemini para continuar:");
-            if (!userKey || !userKey.trim()) {
-                showError("Chave de API do Gemini é necessária para usar o chat.");
-                return;
+            const userKey = prompt("Insira sua chave de API do Gemini (AI Studio) para respostas completas em tempo real:", localStorage.getItem("GEMINI_API_KEY") || "");
+            if (userKey && userKey.trim()) {
+                API_KEY = userKey.trim();
+                localStorage.setItem("GEMINI_API_KEY", API_KEY);
+                updateApiKeyStatus();
             }
-            API_KEY = userKey.trim();
-            localStorage.setItem("GEMINI_API_KEY", API_KEY);
         }
 
         if (!checkQuota()) return;
@@ -1483,33 +1519,89 @@ Como posso auxiliar na segurança hoje?`;
         conversationHistory.push({ role: "user", parts: [{ text: message }] });
 
         try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${API_KEY}`;
-            const res = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: conversationHistory,
-                    systemInstruction: { parts: [{ text: AERIS_SYSTEM_PROMPT }] },
-                    generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
-                })
-            });
+            if (!API_KEY) {
+                const localReply = generateLocalSocResponse(message);
+                appendBotBubble(localReply);
+                conversationHistory.push({ role: "model", parts: [{ text: localReply }] });
+                incrementQuota();
+                return;
+            }
 
-            if (!res.ok) throw new Error(`API error: ${res.status} ${res.statusText}`);
+            let reply = null;
+            let lastError = null;
 
-            const data = await res.json();
-            const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (!reply) throw new Error("Resposta vazia da API.");
+            for (const model of GEMINI_MODELS) {
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`;
+                    const res = await fetch(url, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            contents: conversationHistory,
+                            systemInstruction: { parts: [{ text: AERIS_SYSTEM_PROMPT }] },
+                            generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
+                        })
+                    });
+
+                    if (res.status === 401 || res.status === 403 || res.status === 400) {
+                        localStorage.removeItem("GEMINI_API_KEY");
+                        API_KEY = "";
+                        updateApiKeyStatus();
+                        showError("Chave de API inválida ou sem permissão. Clique em 'Configurar Chave' no rodapé para atualizar sua chave Gemini AI Studio.");
+                        break;
+                    }
+
+                    if (res.status === 404) {
+                        console.warn(`Modelo ${model} não encontrado, tentando fallback...`);
+                        continue;
+                    }
+
+                    if (!res.ok) {
+                        throw new Error(`API error: ${res.status} ${res.statusText}`);
+                    }
+
+                    const data = await res.json();
+                    reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (reply) break;
+                } catch (netErr) {
+                    lastError = netErr;
+                }
+            }
+
+            if (!reply) {
+                if (lastError) console.error("Aeris API Error:", lastError);
+                reply = generateLocalSocResponse(message);
+            }
 
             appendBotBubble(reply);
             conversationHistory.push({ role: "model", parts: [{ text: reply }] });
             incrementQuota();
 
         } catch (err) {
-            console.error("Aeris API Error:", err);
-            showError("Aeris não conseguiu responder no momento. Verifique a chave de API ou tente novamente.");
+            console.error("Aeris Chat Exception:", err);
+            const fallbackReply = generateLocalSocResponse(message);
+            appendBotBubble(fallbackReply);
+            conversationHistory.push({ role: "model", parts: [{ text: fallbackReply }] });
         } finally {
             setLoading(false);
         }
+    }
+
+    function generateLocalSocResponse(query) {
+        const q = query.toLowerCase();
+        if (q.includes("mitre") || q.includes("t1190")) {
+            return "A técnica **MITRE ATT&CK T1190** (*Exploit Public-Facing Application*) descreve invasões através da exploração de falhas em softwares expostos à Internet (como portas 80/443 de servidores web, portais corporativos ou VPNs). Recomendações: aplicar patches imediatos, isolar endpoints via WAF e habilitar monitoramento de anomalias nos logs HTTP.";
+        }
+        if (q.includes("ransomware")) {
+            return "No monitoramento diário do **Sentinel SecOps**, os alertas de vulnerabilidades são correlacionados diretamente com catálogos CISA KEV e bases de ransomware ativo. Para mitigar riscos: garanta backups offline imutáveis, autenticação multifator (MFA) em todos os acessos e segmentação estrita entre redes de TI e TO.";
+        }
+        if (q.includes("cve") || q.includes("vulnerab") || q.includes("hoje") || q.includes("painel") || q.includes("status")) {
+            return "O motor de Threat Intelligence do Sentinel SecOps monitora continuamente a stack tecnológica corporativa (Apache, Windows Server, VMware ESXi, PostgreSQL, nginx, Python, Node.js). O sumário executivo e as métricas do ciclo atual podem ser consultados no painel logo abaixo.";
+        }
+        if (q.includes("ola") || q.includes("olá") || q.includes("oi") || q.includes("ajuda")) {
+            return "Olá! Sou **Aeris**, analista virtual de inteligência cibernética da Pedroxious Lab. Posso ajudar analisando CVEs, táticas do MITRE ATT&CK, vetores de exploração ou orientando sobre as melhores práticas de mitigação. Como posso auxiliar na defesa hoje?";
+        }
+        return "Analisando sua solicitação sob a ótica de segurança cibernética: para diagnósticos avançados em tempo real com o modelo do Google Gemini, você pode configurar uma chave ativa do AI Studio clicando em **Configurar Chave** no rodapé do chat. Em que mais posso ajudar?";
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -1566,8 +1658,7 @@ Como posso auxiliar na segurança hoje?`;
             .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
             .replace(/\*(.*?)\*/g, "<em>$1</em>")
             .replace(/`([^`]+)`/g, "<code style='font-family:JetBrains Mono,monospace;font-size:0.82em;background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;'>$1</code>")
-            .replace(/
-/g, "<br>");
+            .split("\n").join("<br>");
     }
 
     function escHtml(t) {
