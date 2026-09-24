@@ -3067,13 +3067,24 @@ Para an√°lises aprofundadas da sua infraestrutura, recomendo consultar os relat√
     }}
 
     function formatMarkdown(text) {{
-        return text
-            .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-            .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-            .replace(/\*(.*?)\*/g, "<em>$1</em>")
-            .replace(/### (.*?)(?:\r?\n|$)/g, "<h3 style='font-size:0.95rem;font-weight:700;margin:8px 0 4px;color:var(--green);'>$1</h3>")
-            .replace(/`([^`]+)`/g, "<code style='font-family:JetBrains Mono,monospace;font-size:0.82em;background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;'>$1</code>")
-            .split("\n").join("<br>");
+        if (!text) return "";
+        var nl = String.fromCharCode(10);
+        var cr = String.fromCharCode(13);
+        var clean = text.split(cr).join("");
+        var lines = clean.split(nl);
+        for (var i = 0; i < lines.length; i++) {{
+            var line = lines[i];
+            line = line.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
+            if (line.indexOf("### ") === 0) {{
+                line = "<h3 style='font-size:0.95rem;font-weight:700;margin:8px 0 4px;color:var(--green);'>" + line.substring(4) + "</h3>";
+            }}
+            lines[i] = line;
+        }}
+        var res = lines.join("<br>");
+        res = res.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+        res = res.replace(/\*(.*?)\*/g, "<em>$1</em>");
+        res = res.replace(/`([^`]+)`/g, "<code style='font-family:JetBrains Mono,monospace;font-size:0.82em;background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;'>$1</code>");
+        return res;
     }}
 
     function escHtml(t) {{
