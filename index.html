@@ -3238,17 +3238,22 @@ Para análises aprofundadas da sua infraestrutura, recomendo consultar os relat�
 
         // 1. Extrai blocos de código com crases triplas
         const codeBlocks = [];
-        let processed = text.replace(/```([a-zA-Z0-9_\-\.\+]*)\n([\s\S]*?)```/g, function(match, lang, code) {
+        let processed = text.replace(/```([a-zA-Z0-9_\-\.\+]*)
+([\s\S]*?)```/g, function(match, lang, code) {
             const placeholder = `___CODE_BLOCK_${codeBlocks.length}___`;
             codeBlocks.push({
                 lang: lang.trim() || "code",
-                code: code.replace(/\r\n/g, "\n").replace(/\n$/, "")
+                code: code.replace(/
+/g, "
+").replace(/
+$/, "")
             });
             return placeholder;
         });
 
         // 2. Processa linhas estruturadas de Markdown
-        let lines = processed.split("\n");
+        let lines = processed.split("
+");
         let inList = false;
         let inNumberedList = false;
         let formattedLines = [];
@@ -3319,12 +3324,14 @@ Para análises aprofundadas da sua infraestrutura, recomendo consultar os relat�
         if (inList) formattedLines.push("</ul>");
         if (inNumberedList) formattedLines.push("</ol>");
 
-        let html = formattedLines.join("\n");
+        let html = formattedLines.join("
+");
 
         html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
         html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
         html = html.replace(/`([^`]+)`/g, "<code class='msg-inline-code'>$1</code>");
-        html = html.replace(/\n(?!(?:<\/?(ul|ol|li|h1|h2|h3|blockquote|div|pre)))/g, "<br>");
+        html = html.replace(/
+(?!(?:<\/?(ul|ol|li|h1|h2|h3|blockquote|div|pre)))/g, "<br>");
 
         // 3. Reconstrói os blocos de código com cabeçalho, linguagem e botão Copiar
         codeBlocks.forEach((cb, idx) => {
