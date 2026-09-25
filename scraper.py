@@ -3013,11 +3013,11 @@ REGRAS DE COMPORTAMENTO:
     }} catch(e) {{}}
 
     const GEMINI_MODELS = [
-        "gemini-2.0-flash",
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-flash",
-        "gemini-2.5-flash",
-        "gemini-1.5-pro"
+        "gemini-3.8-flash",
+        "gemini-flash-latest",
+        "gemini-3.5-flash",
+        "gemini-flash-lite-latest",
+        "gemini-2.0-flash"
     ];
     const AERIS_SYSTEM_PROMPT = `Você é o SOC Assistant do Sentinel-SecOps, um analista virtual de segurança cibernética integrado ao dashboard de Threat Intelligence.
 CONTEÚDO DO PAINEL ATUAL (gerado em 2026-09-24 00:30):
@@ -3516,7 +3516,9 @@ Para continuar investigando sem interrupções e com modelos mais avançados, fa
             if (API_KEY && (API_KEY.startsWith("AIzaSy") || API_KEY.startsWith("AQ.") || API_KEY.length > 20)) {{
                 for (const model of GEMINI_MODELS) {{
                     try {{
-                        const url = `https://generativelanguage.googleapis.com/v1beta/models/${{model}}:generateContent?key=${{API_KEY}}`;
+                        const url = API_KEY.startsWith("AIzaSy") 
+                            ? `https://generativelanguage.googleapis.com/v1beta/models/${{model}}:generateContent?key=${{API_KEY}}`
+                            : `https://generativelanguage.googleapis.com/v1beta/models/${{model}}:generateContent`;
                         const res = await fetch(url, {{
                             method: "POST",
                             headers: {{ 
