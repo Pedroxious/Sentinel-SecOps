@@ -598,6 +598,8 @@ REGRAS DE COMPORTAMENTO:
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentinel SecOps — Autonomous Threat Intelligence Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
         /* ═══════════════════════════════════════════════════════
            DESIGN TOKENS — Sentinel SecOps Dark Palette
@@ -1173,6 +1175,98 @@ REGRAS DE COMPORTAMENTO:
             border: 1px solid var(--border);
             color: var(--text);
             border-bottom-left-radius: 4px;
+            line-height: 1.6;
+        }}
+
+        /* Rich Markdown formatting */
+        .bubble.bot-bubble h1.msg-h1 {{ font-size: 1.15rem; font-weight: 700; color: var(--green); margin: 12px 0 6px; }}
+        .bubble.bot-bubble h2.msg-h2 {{ font-size: 1.02rem; font-weight: 700; color: var(--green); margin: 10px 0 4px; }}
+        .bubble.bot-bubble h3.msg-h3 {{ font-size: 0.92rem; font-weight: 600; color: var(--cyan); margin: 8px 0 4px; }}
+        .bubble.bot-bubble ul.msg-list, .bubble.bot-bubble ol.msg-num-list {{ margin: 6px 0 8px 20px; }}
+        .bubble.bot-bubble li {{ margin-bottom: 3px; }}
+        .bubble.bot-bubble blockquote.msg-quote {{
+            border-left: 3px solid var(--green);
+            background: rgba(16,185,129,0.06);
+            padding: 6px 12px;
+            margin: 8px 0;
+            border-radius: 0 4px 4px 0;
+            color: var(--text-sub);
+            font-style: italic;
+        }}
+        .bubble.bot-bubble code.msg-inline-code {{
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82em;
+            background: rgba(255,255,255,0.08);
+            color: #38bdf8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }}
+
+        /* Modern Code Block with Language Badge & Copy Button */
+        .code-block-wrapper {{
+            margin: 12px 0;
+            border-radius: var(--radius-md);
+            background: #090b10;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+        }}
+        .code-block-header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 7px 14px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.72rem;
+            user-select: none;
+        }}
+        .code-block-header .code-lang {{
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--green);
+        }}
+        .btn-copy-code {{
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text-sub);
+            font-size: 0.72rem;
+            cursor: pointer;
+            padding: 4px 10px;
+            border-radius: 5px;
+            transition: all 0.15s ease;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+        }}
+        .btn-copy-code:hover {{
+            background: rgba(255,255,255,0.1);
+            color: var(--text);
+            border-color: rgba(255,255,255,0.18);
+        }}
+        .btn-copy-code.copied {{
+            color: var(--green);
+            border-color: rgba(16,185,129,0.4);
+            background: rgba(16,185,129,0.1);
+        }}
+        .code-block-wrapper pre {{
+            margin: 0;
+            padding: 12px 14px;
+            overflow-x: auto;
+            background: #090b10 !important;
+        }}
+        .code-block-wrapper pre code {{
+            font-family: 'JetBrains Mono', monospace !important;
+            font-size: 0.84rem;
+            line-height: 1.55;
+            background: transparent !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
         }}
 
         .msg-meta {{
@@ -3528,7 +3622,7 @@ Para continuar investigando sem interrupções e com modelos mais avançados, fa
                             body: JSON.stringify({{
                                 contents: conversationHistory,
                                 systemInstruction: {{ parts: [{{ text: AERIS_SYSTEM_PROMPT }}] }},
-                                generationConfig: {{ temperature: 0.7, maxOutputTokens: 1024 }}
+                                generationConfig: {{ temperature: 0.7, maxOutputTokens: 4096 }}
                             }})
                         }});
                         if (res.ok) {{
@@ -3553,7 +3647,7 @@ Para continuar investigando sem interrupções e com modelos mais avançados, fa
                         body: JSON.stringify({{
                             contents: conversationHistory,
                             systemInstruction: {{ parts: [{{ text: AERIS_SYSTEM_PROMPT }}] }},
-                            generationConfig: {{ temperature: 0.7, maxOutputTokens: 1024 }}
+                            generationConfig: {{ temperature: 0.7, maxOutputTokens: 4096 }}
                         }})
                     }});
                     if (res.ok) {{
@@ -3704,28 +3798,147 @@ Para análises aprofundadas da sua infraestrutura, recomendo consultar os relat�
                     </div>
                 </div>
             </div>`;
+        if (window.hljs) {{
+            row.querySelectorAll('pre code').forEach((block) => {{
+                try {{ hljs.highlightElement(block); }} catch(e) {{}}
+            }});
+        }}
         return row;
+    }}
+
+    function copyCodeBlock(btn) {{
+        const wrapper = btn.closest(".code-block-wrapper");
+        if (!wrapper) return;
+        const codeEl = wrapper.querySelector("code");
+        if (!codeEl) return;
+        const text = codeEl.innerText;
+        navigator.clipboard.writeText(text).then(() => {{
+            const span = btn.querySelector("span");
+            const originalText = span ? span.innerText : "Copiar código";
+            btn.classList.add("copied");
+            if (span) span.innerText = "Copiado! ✓";
+            setTimeout(() => {{
+                btn.classList.remove("copied");
+                if (span) span.innerText = originalText;
+            }}, 2000);
+        }}).catch(err => {{
+            console.warn("Falha ao copiar:", err);
+        }});
     }}
 
     function formatMarkdown(text) {{
         if (!text) return "";
-        var nl = String.fromCharCode(10);
-        var cr = String.fromCharCode(13);
-        var clean = text.split(cr).join("");
-        var lines = clean.split(nl);
-        for (var i = 0; i < lines.length; i++) {{
-            var line = lines[i];
-            line = line.split("&").join("&amp;").split("<").join("&lt;").split(">").join("&gt;");
-            if (line.indexOf("### ") === 0) {{
-                line = "<h3 style='font-size:0.95rem;font-weight:700;margin:8px 0 4px;color:var(--green);'>" + line.substring(4) + "</h3>";
+
+        // 1. Extrai blocos de código com crases triplas
+        const codeBlocks = [];
+        let processed = text.replace(/```([a-zA-Z0-9_\-\.\+]*)\n([\s\S]*?)```/g, function(match, lang, code) {{
+            const placeholder = `___CODE_BLOCK_${{codeBlocks.length}}___`;
+            codeBlocks.push({{
+                lang: lang.trim() || "code",
+                code: code.replace(/\r\n/g, "\n").replace(/\n$/, "")
+            }});
+            return placeholder;
+        }});
+
+        // 2. Processa linhas estruturadas de Markdown
+        let lines = processed.split("\n");
+        let inList = false;
+        let inNumberedList = false;
+        let formattedLines = [];
+
+        for (let i = 0; i < lines.length; i++) {{
+            let line = lines[i];
+
+            if (line.includes("___CODE_BLOCK_")) {{
+                if (inList) {{ formattedLines.push("</ul>"); inList = false; }}
+                if (inNumberedList) {{ formattedLines.push("</ol>"); inNumberedList = false; }}
+                formattedLines.push(line);
+                continue;
             }}
-            lines[i] = line;
+
+            line = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+            if (/^### (.*$)/.test(line)) {{
+                if (inList) {{ formattedLines.push("</ul>"); inList = false; }}
+                if (inNumberedList) {{ formattedLines.push("</ol>"); inNumberedList = false; }}
+                line = line.replace(/^### (.*$)/, "<h3 class='msg-h3'>$1</h3>");
+                formattedLines.push(line);
+                continue;
+            }}
+            if (/^## (.*$)/.test(line)) {{
+                if (inList) {{ formattedLines.push("</ul>"); inList = false; }}
+                if (inNumberedList) {{ formattedLines.push("</ol>"); inNumberedList = false; }}
+                line = line.replace(/^## (.*$)/, "<h2 class='msg-h2'>$1</h2>");
+                formattedLines.push(line);
+                continue;
+            }}
+            if (/^# (.*$)/.test(line)) {{
+                if (inList) {{ formattedLines.push("</ul>"); inList = false; }}
+                if (inNumberedList) {{ formattedLines.push("</ol>"); inNumberedList = false; }}
+                line = line.replace(/^# (.*$)/, "<h1 class='msg-h1'>$1</h1>");
+                formattedLines.push(line);
+                continue;
+            }}
+
+            if (/^> (.*$)/.test(line)) {{
+                if (inList) {{ formattedLines.push("</ul>"); inList = false; }}
+                if (inNumberedList) {{ formattedLines.push("</ol>"); inNumberedList = false; }}
+                line = line.replace(/^> (.*$)/, "<blockquote class='msg-quote'>$1</blockquote>");
+                formattedLines.push(line);
+                continue;
+            }}
+
+            if (/^[\*\-\+] (.*$)/.test(line)) {{
+                if (inNumberedList) {{ formattedLines.push("</ol>"); inNumberedList = false; }}
+                if (!inList) {{ formattedLines.push("<ul class='msg-list'>"); inList = true; }}
+                line = line.replace(/^[\*\-\+] (.*$)/, "<li>$1</li>");
+                formattedLines.push(line);
+                continue;
+            }}
+
+            if (/^\d+\. (.*$)/.test(line)) {{
+                if (inList) {{ formattedLines.push("</ul>"); inList = false; }}
+                if (!inNumberedList) {{ formattedLines.push("<ol class='msg-num-list'>"); inNumberedList = true; }}
+                line = line.replace(/^\d+\. (.*$)/, "<li>$1</li>");
+                formattedLines.push(line);
+                continue;
+            }}
+
+            if (inList) {{ formattedLines.push("</ul>"); inList = false; }}
+            if (inNumberedList) {{ formattedLines.push("</ol>"); inNumberedList = false; }}
+
+            formattedLines.push(line);
         }}
-        var res = lines.join("<br>");
-        res = res.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-        res = res.replace(/\*(.*?)\*/g, "<em>$1</em>");
-        res = res.replace(/`([^`]+)`/g, "<code style='font-family:JetBrains Mono,monospace;font-size:0.82em;background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:3px;'>$1</code>");
-        return res;
+        if (inList) formattedLines.push("</ul>");
+        if (inNumberedList) formattedLines.push("</ol>");
+
+        let html = formattedLines.join("\n");
+
+        html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+        html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
+        html = html.replace(/`([^`]+)`/g, "<code class='msg-inline-code'>$1</code>");
+        html = html.replace(/\n(?!(?:<\/?(ul|ol|li|h1|h2|h3|blockquote|div|pre)))/g, "<br>");
+
+        // 3. Reconstrói os blocos de código com cabeçalho, linguagem e botão Copiar
+        codeBlocks.forEach((cb, idx) => {{
+            const placeholder = `___CODE_BLOCK_${{idx}}___`;
+            const escapedCode = cb.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            const blockHtml = `
+                <div class="code-block-wrapper">
+                    <div class="code-block-header">
+                        <span class="code-lang">${{cb.lang}}</span>
+                        <button class="btn-copy-code" type="button" onclick="copyCodeBlock(this)">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            <span>Copiar código</span>
+                        </button>
+                    </div>
+                    <pre><code class="language-${{cb.lang}}">${{escapedCode}}</code></pre>
+                </div>
+            `;
+            html = html.replace(placeholder, blockHtml);
+        }});
+
+        return html;
     }}
 
     function escHtml(t) {{
