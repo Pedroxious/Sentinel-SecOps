@@ -1098,7 +1098,7 @@ CONTEÚDO DO PAINEL ATUAL (gerado em {date_str} {hour_str}):
         .chat-welcome.hidden {{ display: none; }}
 
         .aeris-orb {{
-            width: 72px; height: 72px;
+            width: 96px; height: 96px;
             border-radius: 50%;
             background: #030712;
             border: 2px solid rgba(16,185,129,0.45);
