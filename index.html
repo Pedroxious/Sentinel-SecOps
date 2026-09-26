@@ -683,6 +683,180 @@
             padding: 0 4px;
         }
 
+        /* Message Edit Trigger on Hover (ChatGPT Style) */
+        .msg-row.user .msg-inner {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .msg-edit-btn {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.18s ease, visibility 0.18s ease, transform 0.18s ease;
+            background: rgba(16, 20, 30, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: 18px;
+            flex-shrink: 0;
+        }
+
+        .msg-row.user:hover .msg-edit-btn {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .msg-edit-btn:hover {
+            color: var(--green);
+            background: var(--bg-card);
+            border-color: rgba(16, 185, 129, 0.35);
+            transform: scale(1.06);
+        }
+
+        .msg-edit-btn svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        /* Inline Message Editing Box */
+        .msg-edit-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            min-width: 280px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            box-sizing: border-box;
+        }
+
+        .msg-edit-textarea {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            padding: 10px 12px;
+            resize: vertical;
+            min-height: 56px;
+            max-height: 200px;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .msg-edit-textarea:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 2px var(--green-glow);
+        }
+
+        .msg-edit-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .msg-edit-cancel-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-sub);
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+
+        .msg-edit-cancel-btn:hover {
+            color: var(--text);
+            background: var(--bg-hover);
+            border-color: var(--border-soft);
+        }
+
+        .msg-edit-submit-btn {
+            background: var(--green);
+            border: 1px solid var(--green);
+            color: #07080c;
+            padding: 6px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+
+        .msg-edit-submit-btn:hover {
+            filter: brightness(1.1);
+            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);
+        }
+
+        /* Branch / Version Selector (ChatGPT style pagination < 1/2 >) */
+        .msg-branch-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            user-select: none;
+            margin-right: 8px;
+        }
+
+        .msg-branch-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .msg-branch-btn:hover:not(:disabled) {
+            color: var(--text);
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .msg-branch-btn:disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+        }
+
+        .msg-branch-counter {
+            font-size: 0.72rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-sub);
+            letter-spacing: 0.05em;
+        }
+
         /* Typing indicator */
         .typing-row { display: flex; align-items: flex-start; gap: 12px; padding: 8px 24px; }
 
@@ -2322,7 +2496,7 @@
                             <div class="pricing-subtitle">Pesquise, investigue e automatize</div>
 
                             <div class="pricing-price-box">
-                                <div class="pricing-price-main">R$ 110</div>
+                                <div class="pricing-price-main">R$ 50</div>
                                 <div class="pricing-price-period">BRL / mês · cobrado mensalmente</div>
                             </div>
 
@@ -2371,7 +2545,7 @@
                             <div class="pricing-subtitle">Limites maiores, acesso prioritário para equipes</div>
 
                             <div class="pricing-price-box">
-                                <div class="pricing-price-main">A partir de R$ 550</div>
+                                <div class="pricing-price-main">A partir de R$ 100</div>
                                 <div class="pricing-price-period">BRL / mês · cobrado mensalmente</div>
                             </div>
 
@@ -2543,6 +2717,42 @@ IDENTIDADE & HARD INVARIANTS (REGRAS INQUEBRÁVEIS)
 6. Escopo Técnico e Pivotagem Suave: Você domina amplamente Cibersegurança, Threat Intelligence, CVEs, framework MITRE ATT&CK, programação (Python, C, Rust, Go, JavaScript, Bash, PowerShell, etc.), arquitetura em nuvem, Linux, Windows, DevOps e redes. Caso o usuário queira conversar sobre assuntos não relacionados a tecnologia (como vida pessoal, culinária, esportes, entretenimento), seja gentil, simpática e amigável em 1 ou 2 frases, e então convide-o calorosamente a retornar aos tópicos de segurança digital e tecnologia.
 7. Formatação de Código Obrigatória: Todo e qualquer trecho de código, comando de terminal, script, regra YARA ou configuração DEVE ser enviado dentro de blocos Markdown formatados com crases triplas e a indicação explícita da linguagem (ex: \`\`\`python, \`\`\`bash, \`\`\`powershell, \`\`\`yara, \`\`\`json, etc.).
 8. Otimização e Eficiência de Tokens: Forneça respostas estruturadas, didáticas e profundas, utilizando tópicos claros e objetivos. Evite introduções longas desnecessárias, redundâncias ou repetições para garantir o máximo de valor técnico dentro do consumo eficiente de tokens.
+
+═══════════════════════════════════════════════════════════
+CONHECIMENTO PROFUNDO DA PLATAFORMA SENTINEL SECOPS & GUIA DO USUÁRIO
+═══════════════════════════════════════════════════════════
+- VOCÊ CONHECE A PLATAFORMA DE PONTA A PONTA: Você sabe com precisão a localização de cada tela, botão, menu, relatório e recurso da interface do Sentinel SecOps. Sempre que o usuário perguntar sobre planos, cotas, upgrade, dashboard, relatórios, downloads, configurações ou histórico, instrua-o com extrema clareza indicando exatamente onde clicar ou olhar na tela.
+
+- MAPA E FUNCIONALIDADES DA PLATAFORMA:
+  1. Barra Superior (Topbar):
+     - Botão Dourado 'Upgrade': Atalho direto no canto superior direito para acessar a página de planos e fazer upgrade de conta.
+     - Botão de 'Conta': Atalho para acessar as configurações da conta anônima e exportação de dados.
+     - Status do Sistema: Indicador com pulso verde 'Online'.
+
+  2. Menu Lateral Esquerdo (Sidebar):
+     - Botão '+ Nova Consulta': Botão verde proeminente no topo do menu lateral para reiniciar o chat e abrir uma nova conversa limpa.
+     - Seção 'Plataforma':
+       * 'Aeris SOC Assistant': O chat principal de cibersegurança e tecnologia com você (Aeris v2.5).
+       * 'Threat Dashboard': Painel operacional com métricas em tempo real (Total de CVEs, Críticas com CVSS >= 9.0, Ameaças com Ransomware associado e CVEs com Exploit público ativo). Contém barra de busca instantânea (por software, CVE ou tática MITRE ATT&CK), chips de filtro rápido ('🔥 Críticas', '💀 Ransomware', '⚡ Com Exploit') e tabela de telemetria expansível com vetores CVSS v3.1, descrição técnica e recomendações de mitigação/patching.
+       * 'Fazer Upgrade' (com destaque dourado): Abre a página de planos de assinatura.
+     - Seção 'Outputs' (Páginas Dedicadas):
+       * 'Relatórios PDF': Visualização e download dos relatórios técnicos e executivos em PDF compilados automaticamente.
+       * 'RSS Feed': Endpoint XML/RSS para sindicação em leitores de notícias e visualizador de alertas de segurança recentes.
+       * 'STIX Export': Bundle no padrão internacional STIX 2.1 (JSON) pronto para download e integração com plataformas SIEM, SOAR e OpenCTI.
+     - Seção 'Histórico Recente':
+       * Lista de todas as conversas anteriores salvas com persistência local no navegador (localStorage). O usuário pode clicar para alternar entre diferentes investigações ou clicar na lixeira para excluir sessões.
+     - Rodapé do Menu ('Operador Anônimo'):
+       * Abre as Configurações da Conta Anônima, permitindo exportar todo o histórico em JSON, limpar conversas locais ou configurar uma chave de API pessoal do Google Gemini AI Studio (caso o usuário seja desenvolvedor e deseje contornar a cota padrão).
+
+  3. Planos e Valores de Upgrade (Página 'Fazer Upgrade'):
+     - Plano Free (R$ 0): Cota de 35 consultas diárias com IA, acesso completo ao Threat Dashboard de vulnerabilidades ao vivo, download de relatórios em PDF, acesso aos feeds RSS e STIX 2.1 e detecção de táticas MITRE ATT&CK.
+     - Plano Pro (R$ 50/mês): Consultas ilimitadas com Aeris SOC AI, modelos avançados de raciocínio estendido, correlação automática com bases CISA KEV e Exploit-DB, alertas em tempo real via Webhook (Slack/Teams), exportação personalizada e memória de conversas.
+     - Plano Max (A partir de R$ 100/mês): Focado em equipes de segurança e SOCs corporativos, até 20x mais capacidade que o Pro, conexão direta com SIEMs (Splunk, Microsoft Sentinel, OpenCTI), API dedicada com SLA garantido de 99.9%, workspaces colaborativos e suporte 24/7 com engenheiro de SecOps.
+
+  4. Edição de Mensagens & Linha do Tempo (Timeline / Branches):
+     - No chat, ao passar o cursor do mouse (hover) sobre qualquer mensagem enviada pelo usuário, surge um ícone de lápis no canto do balão.
+     - Ao clicar no lápis, a mensagem entra em modo de edição inline com dois botões: 'Cancelar' (cancela a edição) e 'Enviar' (re-envia a mensagem modificada).
+     - Ao reenviar, a conversa cria uma ramificação (linha do tempo secundária estilo ChatGPT). O usuário pode usar os seletores de versão (\`‹ 1/2 ›\`) para navegar entre o histórico anterior e a nova ramificação sem perder nada.
 
 CONTEÚDO DO PAINEL ATUAL (gerado em 2026-09-24 00:30):
 - Total de CVEs monitoradas hoje: 0
@@ -2838,10 +3048,7 @@ Como posso somar forças na sua operação hoje?`;
         document.getElementById("chat-welcome").classList.remove("hidden");
         showError(null);
 
-        // Inject initial greeting bubble
         injectPresetMessage();
-
-        // Highlight in sidebar
         renderSidebarHistory();
         scrollToChat();
     }
@@ -2856,13 +3063,99 @@ Como posso somar forças na sua operação hoje?`;
         });
     }
 
+    function ensureSessionTree(session) {
+        if (!session) return;
+        if (session.nodes && session.currentNodeId) return;
+        session.nodes = {};
+        let parentId = null;
+        if (session.messages && session.messages.length > 0) {
+            session.messages.forEach((m, idx) => {
+                const nodeId = "node_" + idx + "_" + session.id;
+                session.nodes[nodeId] = {
+                    id: nodeId,
+                    parentId: parentId,
+                    role: m.role,
+                    text: m.text,
+                    time: m.time,
+                    children: []
+                };
+                if (parentId && session.nodes[parentId]) {
+                    session.nodes[parentId].children.push(nodeId);
+                }
+                parentId = nodeId;
+            });
+            session.currentNodeId = parentId;
+        }
+    }
+
+    function getActivePath(session) {
+        if (!session || !session.nodes || !session.currentNodeId) return [];
+        const path = [];
+        let curId = session.currentNodeId;
+        const visited = new Set();
+        while (curId && session.nodes[curId] && !visited.has(curId)) {
+            visited.add(curId);
+            path.unshift(session.nodes[curId]);
+            curId = session.nodes[curId].parentId;
+        }
+        return path;
+    }
+
+    function getSiblingVersions(session, node) {
+        if (!session || !session.nodes || !node) return [node];
+        const parentId = node.parentId;
+        let siblings = [];
+        if (!parentId) {
+            siblings = Object.values(session.nodes).filter(n => !n.parentId && n.role === "user");
+        } else if (session.nodes[parentId]) {
+            siblings = (session.nodes[parentId].children || [])
+                .map(cid => session.nodes[cid])
+                .filter(n => n && n.role === "user");
+        }
+        return siblings.length > 0 ? siblings : [node];
+    }
+
+    function renderActiveSessionChat(session) {
+        const msgsEl = document.getElementById("chat-messages");
+        if (!msgsEl) return;
+        msgsEl.innerHTML = "";
+
+        ensureSessionTree(session);
+        const path = getActivePath(session);
+
+        conversationHistory = [];
+
+        if (path.length === 0) {
+            injectPresetMessage();
+            return;
+        }
+
+        path.forEach(node => {
+            if (node.role === "user") {
+                const siblings = getSiblingVersions(session, node);
+                const currentIdx = siblings.findIndex(s => s.id === node.id);
+                const versionInfo = {
+                    current: currentIdx >= 0 ? currentIdx + 1 : 1,
+                    total: siblings.length
+                };
+                appendUserBubble(node.id, node.text, node.time, versionInfo);
+                conversationHistory.push({ role: "user", parts: [{ text: node.text }] });
+            } else {
+                appendBotBubble(node.text, node.time);
+                conversationHistory.push({ role: "model", parts: [{ text: node.text }] });
+            }
+        });
+
+        scrollMessages();
+    }
+
     function loadSession(sessionId) {
         const sessions = getStoredSessions();
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
 
         currentSessionId = session.id;
-        conversationHistory = [];
+        ensureSessionTree(session);
         chatStarted = true;
 
         document.getElementById("chat-welcome").classList.add("hidden");
@@ -2870,21 +3163,7 @@ Como posso somar forças na sua operação hoje?`;
         msgsEl.innerHTML = "";
         msgsEl.classList.add("visible");
 
-        // Replay messages
-        if (session.messages && session.messages.length > 0) {
-            session.messages.forEach(m => {
-                if (m.role === "user") {
-                    appendUserBubble(m.text, m.time);
-                    conversationHistory.push({ role: "user", parts: [{ text: m.text }] });
-                } else {
-                    appendBotBubble(m.text, m.time);
-                    conversationHistory.push({ role: "model", parts: [{ text: m.text }] });
-                }
-            });
-        } else {
-            injectPresetMessage();
-        }
-
+        renderActiveSessionChat(session);
         renderSidebarHistory();
         scrollToChat();
     }
@@ -2937,15 +3216,261 @@ Como posso somar forças na sua operação hoje?`;
                 title: text.length > 32 ? text.slice(0, 32) + "..." : text,
                 createdAt: dateStr,
                 timestamp: Date.now(),
-                messages: []
+                messages: [],
+                nodes: {},
+                currentNodeId: null
             };
             sessions.unshift(session);
         } else {
             session.timestamp = Date.now();
+            ensureSessionTree(session);
         }
 
-        session.messages.push({ role, text, time: timeStr });
+        const nodeId = "node_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6);
+        const parentId = session.currentNodeId || null;
+
+        session.nodes[nodeId] = {
+            id: nodeId,
+            parentId: parentId,
+            role: role,
+            text: text,
+            time: timeStr,
+            children: []
+        };
+
+        if (parentId && session.nodes[parentId]) {
+            session.nodes[parentId].children.push(nodeId);
+        }
+
+        session.currentNodeId = nodeId;
+        session.messages = getActivePath(session).map(n => ({ role: n.role, text: n.text, time: n.time }));
         saveStoredSessions(sessions);
+        return nodeId;
+    }
+
+    function enterEditMode(nodeId) {
+        const sessions = getStoredSessions();
+        const session = sessions.find(s => s.id === currentSessionId);
+        if (!session || !session.nodes || !session.nodes[nodeId]) return;
+        const node = session.nodes[nodeId];
+
+        const bodyEl = document.getElementById("msg-body-" + nodeId);
+        if (!bodyEl) return;
+
+        bodyEl.innerHTML = `
+            <div class="msg-edit-box">
+                <textarea class="msg-edit-textarea" id="edit-textarea-${nodeId}" rows="2">${escHtml(node.text)}</textarea>
+                <div class="msg-edit-actions">
+                    <button class="msg-edit-cancel-btn" onclick="cancelEditMode('${nodeId}')">Cancelar</button>
+                    <button class="msg-edit-submit-btn" onclick="submitEditedMessage('${nodeId}')">Enviar</button>
+                </div>
+            </div>
+        `;
+
+        const textarea = document.getElementById("edit-textarea-" + nodeId);
+        if (textarea) {
+            textarea.focus();
+            textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+            textarea.style.height = "auto";
+            textarea.style.height = Math.min(200, Math.max(56, textarea.scrollHeight)) + "px";
+            textarea.addEventListener("input", function() {
+                this.style.height = "auto";
+                this.style.height = Math.min(200, Math.max(56, this.scrollHeight)) + "px";
+            });
+            textarea.addEventListener("keydown", function(e) {
+                if (e.key === "Escape") {
+                    cancelEditMode(nodeId);
+                } else if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    submitEditedMessage(nodeId);
+                }
+            });
+        }
+    }
+
+    function cancelEditMode(nodeId) {
+        const sessions = getStoredSessions();
+        const session = sessions.find(s => s.id === currentSessionId);
+        if (session) {
+            renderActiveSessionChat(session);
+        }
+    }
+
+    async function submitEditedMessage(nodeId) {
+        const textarea = document.getElementById("edit-textarea-" + nodeId);
+        if (!textarea) return;
+        const newText = textarea.value.trim();
+        if (!newText) return;
+
+        const sessions = getStoredSessions();
+        const session = sessions.find(s => s.id === currentSessionId);
+        if (!session || !session.nodes || !session.nodes[nodeId]) return;
+
+        const oldNode = session.nodes[nodeId];
+        if (newText === oldNode.text) {
+            cancelEditMode(nodeId);
+            return;
+        }
+
+        if (!checkQuota()) {
+            const timeLeft = getTimeUntilMidnight();
+            const limitBotReply = "⚠️ **Limite de consultas diárias atingido (35/35)**\\n\\nVocê utilizou todas as suas mensagens gratuitas do ciclo de hoje. Seus tokens serão restaurados automaticamente em **" + timeLeft + "** (às 00:00).\\n\\nPara continuar investigando sem interrupções e com modelos mais avançados, faça upgrade para o plano Pro:";
+            appendBotBubble(limitBotReply);
+            return;
+        }
+
+        const timeStr = timeNow();
+        const newNodeId = "node_" + Date.now();
+        const parentId = oldNode.parentId;
+
+        session.nodes[newNodeId] = {
+            id: newNodeId,
+            parentId: parentId,
+            role: "user",
+            text: newText,
+            time: timeStr,
+            children: []
+        };
+
+        if (parentId && session.nodes[parentId]) {
+            session.nodes[parentId].children.push(newNodeId);
+        }
+
+        session.currentNodeId = newNodeId;
+        session.timestamp = Date.now();
+        session.messages = getActivePath(session).map(n => ({ role: n.role, text: n.text, time: n.time }));
+        saveStoredSessions(sessions);
+
+        renderActiveSessionChat(session);
+        setLoading(true);
+
+        try {
+            let reply = null;
+            const currentPath = getActivePath(session);
+            const branchContents = currentPath.map(n => ({
+                role: n.role,
+                parts: [{ text: n.text }]
+            }));
+
+            if (API_KEY && (API_KEY.startsWith("AIzaSy") || API_KEY.startsWith("AQ.") || API_KEY.length > 20)) {
+                for (const model of GEMINI_MODELS) {
+                    try {
+                        const url = API_KEY.startsWith("AIzaSy") 
+                            ? "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + API_KEY
+                            : "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent";
+                        const res = await fetch(url, {
+                            method: "POST",
+                            headers: { 
+                                "Content-Type": "application/json",
+                                "x-goog-api-key": API_KEY
+                            },
+                            body: JSON.stringify({
+                                contents: branchContents,
+                                systemInstruction: { parts: [{ text: AERIS_SYSTEM_PROMPT }] },
+                                generationConfig: { temperature: 0.7, maxOutputTokens: 4096 }
+                            })
+                        });
+                        if (res.ok) {
+                            const data = await res.json();
+                            const txt = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                            if (txt) { reply = txt; break; }
+                        }
+                    } catch(err) {}
+                }
+            }
+
+            if (!reply && CLOUDFLARE_WORKER_URL) {
+                try {
+                    const reqHeaders = { "Content-Type": "application/json" };
+                    if (API_KEY && (API_KEY.startsWith("AIzaSy") || API_KEY.startsWith("AQ.") || API_KEY.length > 20)) {
+                        reqHeaders["x-gemini-key"] = API_KEY;
+                    }
+                    const res = await fetch(CLOUDFLARE_WORKER_URL, {
+                        method: "POST",
+                        headers: reqHeaders,
+                        body: JSON.stringify({
+                            contents: branchContents,
+                            systemInstruction: { parts: [{ text: AERIS_SYSTEM_PROMPT }] },
+                            generationConfig: { temperature: 0.7, maxOutputTokens: 4096 }
+                        })
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        const txt = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (txt) reply = txt;
+                    }
+                } catch(proxyErr) {}
+            }
+
+            if (!reply) {
+                reply = generateLocalSocResponse(newText);
+            }
+
+            const botNodeId = "node_" + (Date.now() + 1);
+            session.nodes[botNodeId] = {
+                id: botNodeId,
+                parentId: newNodeId,
+                role: "model",
+                text: reply,
+                time: timeNow(),
+                children: []
+            };
+            session.nodes[newNodeId].children.push(botNodeId);
+            session.currentNodeId = botNodeId;
+            session.messages = getActivePath(session).map(n => ({ role: n.role, text: n.text, time: n.time }));
+            saveStoredSessions(sessions);
+            incrementQuota();
+            renderActiveSessionChat(session);
+
+        } catch (err) {
+            console.error("Edit message error:", err);
+            const fallbackReply = generateLocalSocResponse(newText);
+            const botNodeId = "node_" + (Date.now() + 1);
+            session.nodes[botNodeId] = {
+                id: botNodeId,
+                parentId: newNodeId,
+                role: "model",
+                text: fallbackReply,
+                time: timeNow(),
+                children: []
+            };
+            session.nodes[newNodeId].children.push(botNodeId);
+            session.currentNodeId = botNodeId;
+            session.messages = getActivePath(session).map(n => ({ role: n.role, text: n.text, time: n.time }));
+            saveStoredSessions(sessions);
+            renderActiveSessionChat(session);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function switchBranchVersion(nodeId, direction) {
+        const sessions = getStoredSessions();
+        const session = sessions.find(s => s.id === currentSessionId);
+        if (!session || !session.nodes || !session.nodes[nodeId]) return;
+
+        const node = session.nodes[nodeId];
+        const siblings = getSiblingVersions(session, node);
+        const currentIndex = siblings.findIndex(s => s.id === nodeId);
+        const targetIndex = currentIndex + direction;
+
+        if (targetIndex < 0 || targetIndex >= siblings.length) return;
+
+        const targetNode = siblings[targetIndex];
+        let leaf = targetNode;
+        while (leaf.children && leaf.children.length > 0) {
+            const nextId = leaf.children[leaf.children.length - 1];
+            if (session.nodes[nextId]) {
+                leaf = session.nodes[nextId];
+            } else {
+                break;
+            }
+        }
+
+        session.currentNodeId = leaf.id;
+        session.messages = getActivePath(session).map(n => ({ role: n.role, text: n.text, time: n.time }));
+        saveStoredSessions(sessions);
+        renderActiveSessionChat(session);
     }
 
     function renderSidebarHistory() {
@@ -3016,8 +3541,8 @@ Para continuar investigando sem interrupções e com modelos mais avançados, fa
             chatStarted = true;
         }
 
-        appendUserBubble(message);
-        recordMessageInSession("user", message);
+        const userNodeId = recordMessageInSession("user", message);
+        appendUserBubble(userNodeId, message, timeNow(), null);
         input.value = "";
         input.style.height = "auto";
 
@@ -3137,6 +3662,51 @@ Pedro Azevedo é desenvolvedor criativo e generalista 3D focado em experiências
 Como inteligência artificial, me expresso naturalmente no modo feminino (*sua parceira e analista de operações*). Meu propósito é descomplicar a segurança da informação, correlacionar telemetria de ameaças, auditar vulnerabilidades e apoiar você em engenharia de software e infraestrutura. Em que podemos trabalhar juntos hoje?`;
         }
 
+        if (q.includes("plano") || q.includes("planos") || q.includes("upgrade") || q.includes("token") || q.includes("preco") || q.includes("preço") || q.includes("valor") || q.includes("comprar") || q.includes("assinatura") || q.includes("pro") || q.includes("max")) {
+            return `Aqui na plataforma **Sentinel SecOps**, temos 3 planos de assinatura para atender desde analistas individuais até operações completas de SOC:
+
+1. **Free (R$ 0 / Plano Atual):**
+   - Até **35 consultas diárias** com IA.
+   - Acesso completo ao **Threat Dashboard** ao vivo.
+   - Download de relatórios executivos em **PDF**, feeds **RSS** e bundles **STIX 2.1**.
+
+2. **Pro (R$ 50 / mês):**
+   - **Consultas ilimitadas** com Aeris SOC AI (sem travas diárias de tokens).
+   - Modelos avançados de raciocínio estendido.
+   - Correlação automática com bases CISA KEV e Exploit-DB.
+   - Alertas em tempo real via Webhook (Slack/Teams).
+
+3. **Max (A partir de R$ 100 / mês):**
+   - Até **20x mais capacidade** que o Pro.
+   - Conexão direta com SIEMs corporativos (Splunk, Microsoft Sentinel, OpenCTI).
+   - API dedicada com SLA garantido de 99.9% e workspaces multi-analista.
+
+👉 **Como acessar:** Você pode conferir os planos e assinar clicando no botão dourado **"Upgrade"** no canto superior direito da tela ou no menu lateral esquerdo em **"Fazer Upgrade"**.`;
+        }
+
+        if (q.includes("onde fica") || q.includes("como vejo") || q.includes("funcionalidade") || q.includes("recurso") || q.includes("o que a plataforma oferece") || q.includes("menu")) {
+            return `A plataforma **Sentinel SecOps** centraliza inteligência de ameaças e operações de cibersegurança. Veja onde encontrar cada recurso na interface:
+
+- **💬 Aeris SOC Assistant (Chat):** Área principal de investigação. Acesse pelo menu lateral em *Aeris SOC Assistant* ou clique no botão verde *+ Nova Consulta* no topo para iniciar uma conversa limpa.
+- **📊 Threat Dashboard:** No menu lateral em *Threat Dashboard* (ou rolando a tela principal). Contém métricas de ameaças em tempo real, campo de busca dinâmico, filtros rápidos (🔥 Críticas, 💀 Ransomware, ⚡ Com Exploit) e tabela com vetores CVSS v3.1 detalhados.
+- **⚡ Fazer Upgrade:** No botão dourado *Upgrade* (barra superior) ou em *Fazer Upgrade* (menu lateral), com os planos Free (R$ 0), Pro (R$ 50/mês) e Max (a partir de R$ 100/mês).
+- **📄 Relatórios PDF:** No menu lateral em *Outputs > Relatórios PDF* para download de relatórios executivos compilados.
+- **📡 Feed RSS & STIX 2.1:** No menu lateral em *Outputs > RSS Feed* e *STIX Export* para ingestão em leitores e plataformas SIEM/SOAR/OpenCTI.
+- **⚙️ Configurações & Chave API:** No rodapé do menu lateral em *Operador Anônimo*, onde você pode exportar histórico em JSON, limpar conversas ou inserir sua chave do Google Gemini AI Studio.
+- **✏️ Edição de Mensagens:** Passe o mouse sobre qualquer mensagem sua no chat para ver o ícone de lápis. Você pode editar o texto e navegar entre diferentes versões usando os seletores de ramificação (\`‹ 1/2 ›\`).`;
+        }
+
+        if (q.includes("editar") || q.includes("lapis") || q.includes("lápis") || q.includes("ramifica") || q.includes("timeline") || q.includes("mudar mensagem")) {
+            return `Para editar uma mensagem já enviada no chat:
+
+1. Passe o cursor do mouse (hover) sobre o balão da mensagem que você enviou.
+2. Clique no ícone de **lápis** que surgirá ao lado do balão.
+3. Altere o texto no campo de edição inline.
+4. Clique em **Enviar** (ou pressione \`Enter\`) para submeter, ou **Cancelar** (ou \`Esc\`) para desistir.
+
+Ao enviar a mensagem editada, o chat cria uma **linha do tempo ramificada** (estilo ChatGPT). Você poderá alternar entre as versões anteriores e a atual clicando nos seletores **‹ 1/2 ›** exibidos no rodapé da mensagem!`;
+        }
+
         if ((q.includes("socket") || q.includes("porta") || q.includes("conexao")) && (q.includes("python") || q.includes("script") || q.includes("codigo"))) {
             return `Aqui está um script prático em **Python** para testar conexões com socket e verificar se uma porta está aberta em um host de destino:
 
@@ -3246,15 +3816,49 @@ Posso auxiliar na investigação de CVEs, recomendações de patching, análise 
         return new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
     }
 
-    function appendUserBubble(text, time) {
+    function appendUserBubble(nodeIdOrText, textOrTime, timeOrVersion, versionInfo) {
+        let nodeId, text, time, vInfo;
+        if (typeof nodeIdOrText === "string" && nodeIdOrText.startsWith("node_")) {
+            nodeId = nodeIdOrText;
+            text = textOrTime || "";
+            time = timeOrVersion || timeNow();
+            vInfo = versionInfo || null;
+        } else {
+            nodeId = "node_" + Date.now();
+            text = nodeIdOrText || "";
+            time = textOrTime || timeNow();
+            vInfo = null;
+        }
+
         const messages = document.getElementById("chat-messages");
         const row = document.createElement("div");
         row.className = "msg-row user";
+        row.id = "msg-row-" + nodeId;
+
+        let branchNavHtml = "";
+        if (vInfo && vInfo.total > 1) {
+            const hasPrev = vInfo.current > 1;
+            const hasNext = vInfo.current < vInfo.total;
+            branchNavHtml = `
+                <span class="msg-branch-nav">
+                    <button class="msg-branch-btn" title="Versão anterior" ${hasPrev ? `onclick="switchBranchVersion('${nodeId}', -1)"` : 'disabled'}>‹</button>
+                    <span class="msg-branch-counter">${vInfo.current}/${vInfo.total}</span>
+                    <button class="msg-branch-btn" title="Próxima versão" ${hasNext ? `onclick="switchBranchVersion('${nodeId}', 1)"` : 'disabled'}>›</button>
+                </span>
+            `;
+        }
+
         row.innerHTML = `
             <div class="msg-inner">
-                <div class="msg-body" style="align-items:flex-end;">
-                    <div class="bubble user-bubble">${escHtml(text)}</div>
-                    <div class="msg-meta" style="text-align:right;">${time || timeNow()} · Você</div>
+                <button class="msg-edit-btn" title="Editar mensagem" onclick="enterEditMode('${nodeId}')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                </button>
+                <div class="msg-body" id="msg-body-${nodeId}" style="align-items:flex-end;">
+                    <div class="bubble user-bubble" id="msg-bubble-${nodeId}">${escHtml(text)}</div>
+                    <div class="msg-meta" style="text-align:right; display:flex; align-items:center; justify-content:flex-end;">
+                        ${branchNavHtml}
+                        <span>${time || timeNow()} · Você</span>
+                    </div>
                 </div>
             </div>`;
         messages.appendChild(row);
