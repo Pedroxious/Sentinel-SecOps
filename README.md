@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/dashboard_header.png" width="100%" alt="Sentinel SecOps — Threat Intelligence & Cyber Defense Operations Banner" style="border-radius: 8px;" />
+  <img src="assets/SENTINELSECOPS_BANNER.png" width="100%" alt="Sentinel SecOps — Threat Intelligence & Cyber Defense Operations Banner" style="border-radius: 8px;" />
 </p>
 
 ---

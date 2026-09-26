@@ -719,44 +719,55 @@ CONTEÚDO DO PAINEL ATUAL (gerado em {date_str} {hour_str}):
         .sidebar-logo {{
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 20px 18px 16px;
+            padding: 10px 18px;
             border-bottom: 1px solid var(--border);
+            height: 56px;
+            box-sizing: border-box;
+            flex-shrink: 0;
+            overflow: hidden;
         }}
 
-        .sidebar-logo-icon {{
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            background: var(--green-dim);
-            border: 1px solid rgba(16,185,129,0.25);
+        .sidebar-logo-link {{
             display: flex;
             align-items: center;
-            justify-content: center;
-            color: var(--green);
-            flex-shrink: 0;
+            text-decoration: none;
+            width: 100%;
         }}
 
-        .sidebar-logo-icon svg {{ width: 16px; height: 16px; }}
-
-        .sidebar-logo-text {{
-            font-size: 0.88rem;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            background: linear-gradient(90deg, var(--green), var(--cyan));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1.1;
+        .sidebar-logo-img {{
+            height: 42px;
+            max-width: 100%;
+            width: auto;
+            object-fit: contain;
+            display: block;
+            filter: drop-shadow(0 0 10px rgba(16,185,129,0.25));
+            transition: transform 0.2s ease, filter 0.2s ease;
         }}
 
-        .sidebar-logo-sub {{
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            font-weight: 400;
-            -webkit-text-fill-color: var(--text-muted);
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
+        .sidebar-logo-link:hover .sidebar-logo-img {{
+            transform: scale(1.02);
+            filter: drop-shadow(0 0 16px rgba(16,185,129,0.45));
+        }}
+
+        .sidebar-scroll-container {{
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }}
+
+        .sidebar-scroll-container::-webkit-scrollbar {{
+            width: 4px;
+        }}
+
+        .sidebar-scroll-container::-webkit-scrollbar-track {{
+            background: transparent;
+        }}
+
+        .sidebar-scroll-container::-webkit-scrollbar-thumb {{
+            background: var(--border);
+            border-radius: 2px;
         }}
 
         .sidebar-btn-new {{
@@ -1087,13 +1098,15 @@ CONTEÚDO DO PAINEL ATUAL (gerado em {date_str} {hour_str}):
         .chat-welcome.hidden {{ display: none; }}
 
         .aeris-orb {{
-            width: 56px; height: 56px;
+            width: 72px; height: 72px;
             border-radius: 50%;
-            background: radial-gradient(circle at 35% 35%, rgba(16,185,129,0.3), rgba(6,182,212,0.1));
-            border: 1px solid rgba(16,185,129,0.25);
+            background: #030712;
+            border: 2px solid rgba(16,185,129,0.45);
             display: flex; align-items: center; justify-content: center;
             margin-bottom: 20px;
             position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 28px rgba(16,185,129,0.35);
         }}
 
         .aeris-orb::after {{
@@ -1101,10 +1114,17 @@ CONTEÚDO DO PAINEL ATUAL (gerado em {date_str} {hour_str}):
             position: absolute;
             inset: -4px;
             border-radius: 50%;
-            border: 1px solid rgba(16,185,129,0.08);
+            border: 1px solid rgba(16,185,129,0.15);
+            pointer-events: none;
         }}
 
-        .aeris-orb svg {{ width: 24px; height: 24px; color: var(--green); }}
+        .aeris-orb img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }}
 
         .chat-welcome h1 {{
             font-size: 2rem;
@@ -1196,15 +1216,22 @@ CONTEÚDO DO PAINEL ATUAL (gerado em {date_str} {hour_str}):
         .bot-av {{
             width: 28px; height: 28px;
             border-radius: 50%;
-            background: var(--green-dim);
-            border: 1px solid rgba(16,185,129,0.2);
+            background: #030712;
+            border: 1px solid rgba(16,185,129,0.35);
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
             margin-top: 2px;
-            color: var(--green);
+            overflow: hidden;
+            box-shadow: 0 0 10px rgba(16,185,129,0.25);
         }}
 
-        .bot-av svg {{ width: 13px; height: 13px; }}
+        .bot-av img, .bot-av-img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }}
 
         .bubble {{
             padding: 12px 16px;
@@ -2536,13 +2563,9 @@ CONTEÚDO DO PAINEL ATUAL (gerado em {date_str} {hour_str}):
     <aside class="sidebar" id="sidebar">
         <!-- Logo -->
         <div class="sidebar-logo">
-            <div class="sidebar-logo-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </div>
-            <div>
-                <div class="sidebar-logo-text">Sentinel SecOps</div>
-                <div class="sidebar-logo-sub">Threat Intelligence</div>
-            </div>
+            <a href="https://pedroxious.github.io/Sentinel-SecOps/" class="sidebar-logo-link" title="Sentinel SecOps">
+                <img src="assets/SentinelLogo.png" alt="Sentinel SecOps" class="sidebar-logo-img" />
+            </a>
         </div>
 
         <!-- Independent Scroll Container -->
@@ -2654,7 +2677,7 @@ CONTEÚDO DO PAINEL ATUAL (gerado em {date_str} {hour_str}):
                     <!-- Welcome screen -->
                     <div class="chat-welcome" id="chat-welcome">
                         <div class="aeris-orb">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                            <img src="assets/Aeris.gif" alt="Aeris v2.5" />
                         </div>
                         <h1>Como posso ajudar?</h1>
                         <p>Analise ameaças cibernéticas, CVEs críticas e vetores de ataque com suporte autônomo da Aeris.</p>
@@ -4523,7 +4546,7 @@ Posso auxiliar na investigação de CVEs, recomendações de patching, análise 
         row.innerHTML = `
             <div class="msg-inner">
                 <div class="bot-av" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <img src="assets/Aeris.gif" alt="Aeris" class="bot-av-img" />
                 </div>
                 <div class="msg-body">
                     <div class="bubble bot-bubble">${{formatted}}</div>
@@ -4708,7 +4731,7 @@ Posso auxiliar na investigação de CVEs, recomendações de patching, análise 
             typing.className = "typing-row";
             typing.innerHTML = `
                 <div class="bot-av" aria-hidden="true">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <img src="assets/Aeris.gif" alt="Aeris" class="bot-av-img" />
                 </div>
                 <div class="typing-dots">
                     <span></span><span></span><span></span>
