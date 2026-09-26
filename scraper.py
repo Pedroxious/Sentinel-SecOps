@@ -1134,8 +1134,8 @@ CONTEÚDO DO PAINEL ATUAL (gerado em {date_str} {hour_str}):
         }}
 
         .aeris-orb img {{
-            width: 115%;
-            height: 115%;
+            width: 132%;
+            height: 132%;
             object-fit: cover;
             border-radius: 50%;
             display: block;
@@ -1143,7 +1143,6 @@ CONTEÚDO DO PAINEL ATUAL (gerado em {date_str} {hour_str}):
             user-select: none;
             -webkit-user-select: none;
             -webkit-user-drag: none;
-            draggable: false;
         }}
 
         .chat-welcome h1 {{
@@ -1243,14 +1242,28 @@ CONTEÚDO DO PAINEL ATUAL (gerado em {date_str} {hour_str}):
             margin-top: 2px;
             overflow: hidden;
             box-shadow: 0 0 10px rgba(16,185,129,0.25);
+            cursor: default;
+            user-select: none;
+            -webkit-user-select: none;
+            transition: box-shadow 0.30s ease, border-color 0.30s ease, transform 0.30s ease;
+        }}
+
+        .bot-av:hover {{
+            transform: scale(1.18);
+            box-shadow: 0 0 22px rgba(16,185,129,0.70), 0 0 8px rgba(16,185,129,0.45);
+            border-color: rgba(16,185,129,0.85);
         }}
 
         .bot-av img, .bot-av-img {{
-            width: 100%;
-            height: 100%;
+            width: 132%;
+            height: 132%;
             object-fit: cover;
             border-radius: 50%;
             display: block;
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-user-drag: none;
         }}
 
         .bubble {{
@@ -4566,7 +4579,7 @@ Posso auxiliar na investigação de CVEs, recomendações de patching, análise 
         row.innerHTML = `
             <div class="msg-inner">
                 <div class="bot-av" aria-hidden="true">
-                    <img src="assets/Aeris.gif" alt="Aeris" class="bot-av-img" />
+                    <img src="assets/Aeris.gif" alt="Aeris" class="bot-av-img" draggable="false" oncontextmenu="return false;" ondragstart="return false;" />
                 </div>
                 <div class="msg-body">
                     <div class="bubble bot-bubble">${{formatted}}</div>
@@ -4751,7 +4764,7 @@ Posso auxiliar na investigação de CVEs, recomendações de patching, análise 
             typing.className = "typing-row";
             typing.innerHTML = `
                 <div class="bot-av" aria-hidden="true">
-                    <img src="assets/Aeris.gif" alt="Aeris" class="bot-av-img" />
+                    <img src="assets/Aeris.gif" alt="Aeris" class="bot-av-img" draggable="false" oncontextmenu="return false;" ondragstart="return false;" />
                 </div>
                 <div class="typing-dots">
                     <span></span><span></span><span></span>
