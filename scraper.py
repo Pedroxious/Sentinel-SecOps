@@ -2320,57 +2320,57 @@ REGRAS DE COMPORTAMENTO:
             </div>
         </div>
 
-        <!-- New chat session button -->
-        <button class="sidebar-btn-new" onclick="startNewSession()">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Nova Consulta
-        </button>
+        <!-- Independent Scroll Container -->
+        <div class="sidebar-scroll-container">
+            <!-- New chat session button -->
+            <button class="sidebar-btn-new" onclick="startNewSession()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Nova Consulta
+            </button>
 
-        <!-- Platform Navigation -->
-        <div class="sidebar-section">
-            <div class="sidebar-section-label">Plataforma</div>
-            <button class="sidebar-btn active" id="nav-chat" onclick="showView('view-chat-dash'); scrollToChat();">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                Aeris SOC Assistant
-            </button>
-            <button class="sidebar-btn" id="nav-dashboard" onclick="showView('view-chat-dash'); scrollToDashboard();">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                Threat Dashboard
-            </button>
-            <button class="sidebar-btn" id="nav-upgrade" onclick="showView('view-upgrade');" style="color:var(--yellow); font-weight:600;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                Fazer Upgrade
-            </button>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                Threat Dashboard
-            </button>
-        </div>
-
-        <!-- Outputs Navigation (Single Pages) -->
-        <div class="sidebar-section">
-            <div class="sidebar-section-label">Outputs</div>
-            <button class="sidebar-btn" id="nav-pdf" onclick="showView('view-pdf');">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                Relatórios PDF
-            </button>
-            <button class="sidebar-btn" id="nav-rss" onclick="showView('view-rss');">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
-                RSS Feed
-            </button>
-            <button class="sidebar-btn" id="nav-stix" onclick="showView('view-stix');">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                STIX Export
-            </button>
-        </div>
-
-        <!-- Multi-session Chat History in Sidebar -->
-        <div class="sidebar-section" style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
-            <div class="sidebar-section-label">
-                <span>Histórico recente</span>
-                <span id="session-count-badge" style="font-size:0.6rem; color:var(--green); text-transform:none;">0 salvas</span>
+            <!-- Platform Navigation -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Plataforma</div>
+                <button class="sidebar-btn active" id="nav-chat" onclick="showView('view-chat-dash'); scrollToChat();">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Aeris SOC Assistant
+                </button>
+                <button class="sidebar-btn" id="nav-dashboard" onclick="showView('view-chat-dash'); scrollToDashboard();">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    Threat Dashboard
+                </button>
+                <button class="sidebar-btn" id="nav-upgrade" onclick="showView('view-upgrade');" style="color:var(--yellow); font-weight:600;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    Fazer Upgrade
+                </button>
             </div>
-            <div class="sidebar-history" id="session-history">
-                <!-- Dynamically rendered chat sessions -->
+
+            <!-- Outputs Navigation (Single Pages) -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-label">Outputs</div>
+                <button class="sidebar-btn" id="nav-pdf" onclick="showView('view-pdf');">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Relatórios PDF
+                </button>
+                <button class="sidebar-btn" id="nav-rss" onclick="showView('view-rss');">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>
+                    RSS Feed
+                </button>
+                <button class="sidebar-btn" id="nav-stix" onclick="showView('view-stix');">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    STIX Export
+                </button>
+            </div>
+
+            <!-- Multi-session Chat History in Sidebar -->
+            <div class="sidebar-section" style="flex:1; display:flex; flex-direction:column;">
+                <div class="sidebar-section-label">
+                    <span>Histórico recente</span>
+                    <span id="session-count-badge" style="font-size:0.6rem; color:var(--green); text-transform:none;">0 salvas</span>
+                </div>
+                <div class="sidebar-history" id="session-history">
+                    <!-- Dynamically rendered chat sessions -->
+                </div>
             </div>
         </div>
 
@@ -3708,9 +3708,9 @@ Para continuar investigando sem interrupções e com modelos mais avançados, fa
         }}
 
         if (q.includes("apache") || q.includes("cve-2024-38475")) {{
-            return `A falha **CVE-2024-38475** no **Apache HTTP Server** possui score **CVSS 9.8 (Crítico)**. Trata-se de uma falha de substituição de URL no \`mod_proxy\` que permite contornar restrições de proxy reverso e acessar manipuladores internos de servidores de aplicação.
+            return `A falha **CVE-2024-38475** no **Apache HTTP Server** possui score **CVSS 9.8 (Crítico)**. Trata-se de uma falha de substituição de URL no \\`mod_proxy\\` que permite contornar restrições de proxy reverso e acessar manipuladores internos de servidores de aplicação.
 
-**Recomendação:** Atualizar o servidor web imediatamente para a versão 2.4.60 ou superior e revisar as diretivas \`ProxyPassMatch\`.`;
+**Recomendação:** Atualizar o servidor web imediatamente para a versão 2.4.60 ou superior e revisar as diretivas \\`ProxyPassMatch\\`.`;
         }}
 
         if (q.includes("vmware") || q.includes("esxi") || q.includes("cve-2024-37085")) {{
@@ -3722,7 +3722,7 @@ Esta vulnerabilidade tem sido explorada ativamente em campanhas de ransomware. R
         if (q.includes("windows") || q.includes("rdp") || q.includes("cve-2024-38077")) {{
             return `A vulnerabilidade **CVE-2024-38077** (conhecida como *MadLicense*) afeta o serviço de Licenciamento de Área de Trabalho Remota (*Remote Desktop Licensing*) no **Windows Server** (Score **9.8 Crítico**).
 
-Permite execução remota de código (RCE) como \`NT AUTHORITY\SYSTEM\` sem qualquer autenticação prévia. A Microsoft disponibilizou a correção no Patch Tuesday (KB5040442).`;
+Permite execução remota de código (RCE) como \\`NT AUTHORITY\\SYSTEM\\` sem qualquer autenticação prévia. A Microsoft disponibilizou a correção no Patch Tuesday (KB5040442).`;
         }}
 
         if (q.includes("cve") || q.includes("vulnerab") || q.includes("hoje") || q.includes("painel") || q.includes("status") || q.includes("crítica") || q.includes("critica")) {{
@@ -3766,7 +3766,7 @@ Para análises aprofundadas da sua infraestrutura, recomendo consultar os relat�
         row.className = "msg-row user";
         row.innerHTML = `
             <div class="msg-inner">
-                <div>
+                <div class="msg-body" style="align-items:flex-end;">
                     <div class="bubble user-bubble">${{escHtml(text)}}</div>
                     <div class="msg-meta" style="text-align:right;">${{time || timeNow()}} · Você</div>
                 </div>
@@ -3791,7 +3791,7 @@ Para análises aprofundadas da sua infraestrutura, recomendo consultar os relat�
                 <div class="bot-av" aria-hidden="true">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 </div>
-                <div>
+                <div class="msg-body">
                     <div class="bubble bot-bubble">${{formatted}}</div>
                     <div class="msg-meta">
                         ${{isPreset ? "Aeris · SOC Intelligence" : (time || timeNow()) + " · Aeris"}}
@@ -3831,17 +3831,17 @@ Para análises aprofundadas da sua infraestrutura, recomendo consultar os relat�
 
         // 1. Extrai blocos de código com crases triplas
         const codeBlocks = [];
-        let processed = text.replace(/```([a-zA-Z0-9_\-\.\+]*)\n([\s\S]*?)```/g, function(match, lang, code) {{
+        let processed = text.replace(/```([a-zA-Z0-9_\\-\\.\\+]*)\\r?\\n([\\s\\S]*?)```/g, function(match, lang, code) {{
             const placeholder = `___CODE_BLOCK_${{codeBlocks.length}}___`;
             codeBlocks.push({{
                 lang: lang.trim() || "code",
-                code: code.replace(/\r\n/g, "\n").replace(/\n$/, "")
+                code: code.replace(/\\r\\n/g, "\\n").replace(/\\n$/, "")
             }});
             return placeholder;
         }});
 
         // 2. Processa linhas estruturadas de Markdown
-        let lines = processed.split("\n");
+        let lines = processed.split("\\n");
         let inList = false;
         let inNumberedList = false;
         let formattedLines = [];
@@ -3880,26 +3880,26 @@ Para análises aprofundadas da sua infraestrutura, recomendo consultar os relat�
                 continue;
             }}
 
-            if (/^> (.*$)/.test(line)) {{
+            if (/^(&gt;|>) (.*$)/.test(line)) {{
                 if (inList) {{ formattedLines.push("</ul>"); inList = false; }}
                 if (inNumberedList) {{ formattedLines.push("</ol>"); inNumberedList = false; }}
-                line = line.replace(/^> (.*$)/, "<blockquote class='msg-quote'>$1</blockquote>");
+                line = line.replace(/^(&gt;|>) (.*$)/, "<blockquote class='msg-quote'>$2</blockquote>");
                 formattedLines.push(line);
                 continue;
             }}
 
-            if (/^[\*\-\+] (.*$)/.test(line)) {{
+            if (/^[\\*\\-\\+] (.*$)/.test(line)) {{
                 if (inNumberedList) {{ formattedLines.push("</ol>"); inNumberedList = false; }}
                 if (!inList) {{ formattedLines.push("<ul class='msg-list'>"); inList = true; }}
-                line = line.replace(/^[\*\-\+] (.*$)/, "<li>$1</li>");
+                line = line.replace(/^[\\*\\-\\+] (.*$)/, "<li>$1</li>");
                 formattedLines.push(line);
                 continue;
             }}
 
-            if (/^\d+\. (.*$)/.test(line)) {{
+            if (/^\\d+\\. (.*$)/.test(line)) {{
                 if (inList) {{ formattedLines.push("</ul>"); inList = false; }}
                 if (!inNumberedList) {{ formattedLines.push("<ol class='msg-num-list'>"); inNumberedList = true; }}
-                line = line.replace(/^\d+\. (.*$)/, "<li>$1</li>");
+                line = line.replace(/^\\d+\\. (.*$)/, "<li>$1</li>");
                 formattedLines.push(line);
                 continue;
             }}
@@ -3912,12 +3912,12 @@ Para análises aprofundadas da sua infraestrutura, recomendo consultar os relat�
         if (inList) formattedLines.push("</ul>");
         if (inNumberedList) formattedLines.push("</ol>");
 
-        let html = formattedLines.join("\n");
+        let html = formattedLines.join("\\n");
 
-        html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-        html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
+        html = html.replace(/\\*\\*(.*?)\\*\\*/g, "<strong>$1</strong>");
+        html = html.replace(/\\*(.*?)\\*/g, "<em>$1</em>");
         html = html.replace(/`([^`]+)`/g, "<code class='msg-inline-code'>$1</code>");
-        html = html.replace(/\n(?!(?:<\/?(ul|ol|li|h1|h2|h3|blockquote|div|pre)))/g, "<br>");
+        html = html.replace(/\\n(?!(?:<\\/?(ul|ol|li|h1|h2|h3|blockquote|div|pre)))/g, "<br>");
 
         // 3. Reconstrói os blocos de código com cabeçalho, linguagem e botão Copiar
         codeBlocks.forEach((cb, idx) => {{
