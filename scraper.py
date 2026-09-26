@@ -1098,7 +1098,7 @@ CONTEÚDO DO PAINEL ATUAL (gerado em {date_str} {hour_str}):
         .chat-welcome.hidden {{ display: none; }}
 
         .aeris-orb {{
-            width: 96px; height: 96px;
+            width: 120px; height: 120px;
             border-radius: 50%;
             background: #030712;
             border: 2px solid rgba(16,185,129,0.45);
@@ -1107,6 +1107,16 @@ CONTEÚDO DO PAINEL ATUAL (gerado em {date_str} {hour_str}):
             position: relative;
             overflow: hidden;
             box-shadow: 0 0 28px rgba(16,185,129,0.35);
+            cursor: default;
+            transition: box-shadow 0.35s ease, border-color 0.35s ease, transform 0.35s ease;
+            user-select: none;
+            -webkit-user-select: none;
+        }}
+
+        .aeris-orb:hover {{
+            transform: scale(1.08);
+            box-shadow: 0 0 52px rgba(16,185,129,0.70), 0 0 18px rgba(16,185,129,0.45);
+            border-color: rgba(16,185,129,0.85);
         }}
 
         .aeris-orb::after {{
@@ -1116,14 +1126,24 @@ CONTEÚDO DO PAINEL ATUAL (gerado em {date_str} {hour_str}):
             border-radius: 50%;
             border: 1px solid rgba(16,185,129,0.15);
             pointer-events: none;
+            transition: border-color 0.35s ease;
+        }}
+
+        .aeris-orb:hover::after {{
+            border-color: rgba(16,185,129,0.40);
         }}
 
         .aeris-orb img {{
-            width: 100%;
-            height: 100%;
+            width: 115%;
+            height: 115%;
             object-fit: cover;
             border-radius: 50%;
             display: block;
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-user-drag: none;
+            draggable: false;
         }}
 
         .chat-welcome h1 {{
@@ -2677,7 +2697,7 @@ CONTEÚDO DO PAINEL ATUAL (gerado em {date_str} {hour_str}):
                     <!-- Welcome screen -->
                     <div class="chat-welcome" id="chat-welcome">
                         <div class="aeris-orb">
-                            <img src="assets/Aeris.gif" alt="Aeris v2.5" />
+                            <img src="assets/Aeris.gif" alt="Aeris v2.5" draggable="false" oncontextmenu="return false;" ondragstart="return false;" />
                         </div>
                         <h1>Como posso ajudar?</h1>
                         <p>Analise ameaças cibernéticas, CVEs críticas e vetores de ataque com suporte autônomo da Aeris.</p>
