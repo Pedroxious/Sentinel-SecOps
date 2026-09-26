@@ -3242,17 +3242,13 @@ Para análises aprofundadas da sua infraestrutura, recomendo consultar os relat�
             const placeholder = `___CODE_BLOCK_${codeBlocks.length}___`;
             codeBlocks.push({
                 lang: lang.trim() || "code",
-                code: code.replace(/
-/g, "
-").replace(/
-$/, "")
+                code: code.replace(/\r\n/g, "\n").replace(/\n$/, "")
             });
             return placeholder;
         });
 
         // 2. Processa linhas estruturadas de Markdown
-        let lines = processed.split("
-");
+        let lines = processed.split("\n");
         let inList = false;
         let inNumberedList = false;
         let formattedLines = [];
@@ -3323,14 +3319,12 @@ $/, "")
         if (inList) formattedLines.push("</ul>");
         if (inNumberedList) formattedLines.push("</ol>");
 
-        let html = formattedLines.join("
-");
+        let html = formattedLines.join("\n");
 
         html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
         html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
         html = html.replace(/`([^`]+)`/g, "<code class='msg-inline-code'>$1</code>");
-        html = html.replace(/
-(?!(?:<\/?(ul|ol|li|h1|h2|h3|blockquote|div|pre)))/g, "<br>");
+        html = html.replace(/\n(?!(?:<\/?(ul|ol|li|h1|h2|h3|blockquote|div|pre)))/g, "<br>");
 
         // 3. Reconstrói os blocos de código com cabeçalho, linguagem e botão Copiar
         codeBlocks.forEach((cb, idx) => {
