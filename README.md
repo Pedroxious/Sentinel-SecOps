@@ -48,13 +48,13 @@ No coração do ecossistema atua a **Aeris v2.5 (Sentinel Core)**, uma inteligê
 A esteira de integração do Sentinel SecOps executa varreduras programadas e automações analíticas orquestradas pelo GitHub Actions:
 
 <!-- STATUS_START -->
-**Last Update:** 2026-11-07 11:37 (BRT)
+**Last Update:** 2026-11-07 15:26 (BRT)
 
 **Network Status:** ATTENTION
 
 **Critical CVEs Today:** 0
 
-**[Download Latest PDF Report](pdf_reports/Report_2026-11-07_11-37.pdf)**
+**[Download Latest PDF Report](pdf_reports/Report_2026-11-07_15-26.pdf)**
 
 **[View Minimal HTML Dashboard](index.html)**
 
